@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Óxido - Dashboard de Eventos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="control">
+
+
+<!-- ========= NAV (siempre visible) ========= -->
+
+<nav class="navPrincipal" id="navPrincipal">
+
+<div class="navMarca">
+<img src="logo.png" class="navLogo">
+<span class="navTitulo">LA ÓXIDO</span>
+</div>
+
+<button class="navLogin" onclick="abrirModalLogin()">Iniciar sesión</button>
+
+</nav>
+
+<div class="navFranja"></div>
+
+
+
+<!-- ========= LANDING (visible sin sesión iniciada) ========= -->
+
+<div id="landing" class="landing">
+
+<section class="hero">
+
+<span class="heroEyebrow">PANEL DE EVENTOS</span>
+
+<h1 class="heroTitulo">
+Gestiona tus<br>
+<span class="heroAccent">eventos en directo.</span>
+</h1>
+
+<p class="heroTexto">
+Crea un evento por cada actuación, con su propio QR y su propia bandeja
+de moderación, todos separados entre sí.
+</p>
+
+</section>
+
+</div>
+
+
+
+<!-- ========= MODAL LOGIN ========= -->
+
+<div id="modalLogin" class="modalFondo" style="display:none" onclick="cerrarModalLoginFondo(event)">
+
+<div class="modalLogin">
+
+<button class="modalCerrar" onclick="cerrarModalLogin()">✕</button>
+
+<h2>Acceso de moderación</h2>
+
+<input id="loginEmail" type="email" placeholder="Email">
+
+<input id="loginPass" type="password" placeholder="Contraseña">
+
+<button class="mostrar botonAncho" onclick="iniciarSesion()">Entrar</button>
+
+<div id="loginError" class="avisoPublico"></div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========= MODAL CREAR EVENTO ========= -->
+
+<div id="modalCrearEvento" class="modalFondo" style="display:none" onclick="cerrarModalCrearEventoFondo(event)">
+
+<div class="modalLogin">
+
+<button class="modalCerrar" onclick="cerrarModalCrearEvento()">✕</button>
+
+<h2>Crear evento</h2>
+
+<input id="ceTitulo" placeholder="Título del evento (ej. Concierto Valencia)">
+
+<input id="ceFecha" type="date">
+
+<button class="mostrar botonAncho" onclick="crearEvento()">Crear evento</button>
+
+<div id="ceError" class="avisoPublico"></div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========= MODAL QR ========= -->
+
+<div id="modalQR" class="modalFondo" style="display:none" onclick="cerrarModalQRFondo(event)">
+
+<div class="modalLogin">
+
+<button class="modalCerrar" onclick="cerrarModalQR()">✕</button>
+
+<h2 id="qrTitulo">Evento</h2>
+
+<p id="qrEnlace" class="enlacePublico"></p>
+
+<div id="qrContenedorDashboard"></div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========= PANEL DASHBOARD (oculto hasta iniciar sesión) ========= -->
+
+<div id="panelDashboard" style="display:none">
+
+
+<header>
+<img src="logo.png" class="logo">
+<h1>📋 Tus Eventos</h1>
+<button class="mostrar botonPequeño" onclick="abrirModalCrearEvento()">+ Crear evento</button>
+<button class="limpiar botonPequeño" onclick="cerrarSesion()">Cerrar sesión</button>
+</header>
+
+
+<section id="listaEventos" class="listaEventos">
+<p class="vacio">Cargando...</p>
+</section>
+
+
+</div>
+
+
+
+
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="moderacion.js"></script>
+
+
+<script>
+
+
+/* ==================================
+   LOGIN
+   ================================== */
+
+
+auth.onAuthStateChanged(usuario=>{
+
+  if(usuario){
+
+    document.getElementById("navPrincipal").style.display="none";
+
+    document.getElementById("landing").style.display="none";
+
+    cerrarModalLogin();
+
+    document.getElementById("panelDashboard").style.display="block";
+
+    cargarEventos();
+
+  }else{
+
+    document.getElementById("navPrincipal").style.display="flex";
+
+    document.getElementById("landing").style.display="block";
+
+    document.getElementById("panelDashboard").style.display="none";
+
+  }
+
+});
+
+
+
+function abrirModalLogin(){
+
+  document.getElementById("modalLogin").style.display="flex";
+
+}
+
+
+function cerrarModalLogin(){
+
+  document.getElementById("modalLogin").style.display="none";
+
+}
+
+
+function cerrarModalLoginFondo(e){
+
+  if(e.target.id==="modalLogin") cerrarModalLogin();
+
+}
+
+
+
+function iniciarSesion(){
+
+  let email = document.getElementById("loginEmail").value;
+
+  let pass = document.getElementById("loginPass").value;
+
+  document.getElementById("loginError").style.display="none";
+
+  auth.signInWithEmailAndPassword(email, pass)
+  .catch(err=>{
+
+    let error = document.getElementById("loginError");
+
+    error.textContent = "No se pudo iniciar sesión: " + err.message;
+
+    error.style.display="block";
+
+  });
+
+}
+
+
+
+function cerrarSesion(){
+
+  auth.signOut();
+
+}
+
+
+
+
+/* ==================================
+   LISTA DE EVENTOS
+   ================================== */
+
+
+function cargarEventos(){
+
+  refEventos()
+  .orderBy("creado","desc")
+  .onSnapshot(snapshot=>{
+
+    renderEventos(snapshot.docs);
+
+  }, err=>{
+
+    console.error("Error cargando eventos:", err);
+
+  });
+
+}
+
+
+
+
+function renderEventos(docs){
+
+  let cont = document.getElementById("listaEventos");
+
+  if(docs.length===0){
+
+    cont.innerHTML = '<p class="vacio">Todavía no has creado ningún evento.</p>';
+
+    return;
+
+  }
+
+
+  cont.innerHTML = "";
+
+
+  docs.forEach(doc=>{
+
+    let d = doc.data();
+
+    let tarjeta = document.createElement("div");
+
+    tarjeta.className = "tarjetaEvento";
+
+
+    tarjeta.innerHTML = `
+    <div class="tarjetaEventoInfo">
+    <h3>${escapeHTML(d.titulo || doc.id)}</h3>
+    <p>${escapeHTML(d.fecha || "")}</p>
+    </div>
+    <div class="tarjetaEventoAcciones">
+    <button class="mostrar" data-id="${doc.id}" data-accion="moderar">🎛️ Moderar</button>
+    <button class="fotoBtn" data-id="${doc.id}" data-titulo="${escapeHTML(d.titulo || doc.id)}" data-accion="qr">📱 Ver QR</button>
+    </div>
+    `;
+
+
+    cont.appendChild(tarjeta);
+
+  });
+
+
+  cont.querySelectorAll("button").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      if(btn.dataset.accion==="moderar"){
+
+        window.location.href = "control.html?evento=" + encodeURIComponent(btn.dataset.id);
+
+      }
+
+
+      if(btn.dataset.accion==="qr"){
+
+        verQR(btn.dataset.id, btn.dataset.titulo);
+
+      }
+
+    });
+
+  });
+
+}
+
+
+
+
+/* ==================================
+   CREAR EVENTO
+   ================================== */
+
+
+function abrirModalCrearEvento(){
+
+  document.getElementById("ceTitulo").value = "";
+
+  document.getElementById("ceFecha").value = "";
+
+  document.getElementById("ceError").style.display = "none";
+
+  document.getElementById("modalCrearEvento").style.display = "flex";
+
+}
+
+
+function cerrarModalCrearEvento(){
+
+  document.getElementById("modalCrearEvento").style.display = "none";
+
+}
+
+
+function cerrarModalCrearEventoFondo(e){
+
+  if(e.target.id==="modalCrearEvento") cerrarModalCrearEvento();
+
+}
+
+
+
+
+function generarSlug(texto){
+
+  return normalizarTexto(texto)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-+|-+$)/g, "")
+    || "evento";
+
+}
+
+
+
+
+async function crearEvento(){
+
+  let titulo = document.getElementById("ceTitulo").value.trim();
+
+  let fecha = document.getElementById("ceFecha").value;
+
+  let error = document.getElementById("ceError");
+
+
+  if(!titulo){
+
+    error.textContent = "Ponle un título al evento.";
+
+    error.style.display = "block";
+
+    return;
+
+  }
+
+
+  let base = generarSlug(titulo);
+
+  let slug = base;
+
+  let intento = 1;
+
+
+  try{
+
+    while((await refEvento(slug).get()).exists){
+
+      intento++;
+
+      slug = base + "-" + intento;
+
+    }
+
+
+    await refEvento(slug).set({
+
+      titulo: titulo,
+
+      fecha: fecha,
+
+      creado: firebase.firestore.FieldValue.serverTimestamp(),
+
+      creadoPor: auth.currentUser.uid
+
+    });
+
+
+    cerrarModalCrearEvento();
+
+
+  }catch(err){
+
+    console.error(err);
+
+    error.textContent = "No se pudo crear el evento: " + err.message;
+
+    error.style.display = "block";
+
+  }
+
+}
+
+
+
+
+/* ==================================
+   QR POR EVENTO
+   ================================== */
+
+
+function verQR(id, titulo){
+
+  let url = new URL("index.html", window.location.href);
+
+  url.searchParams.set("evento", id);
+
+
+  document.getElementById("qrTitulo").textContent = titulo;
+
+  document.getElementById("qrEnlace").textContent = url.toString();
+
+
+  let contenedor = document.getElementById("qrContenedorDashboard");
+
+  contenedor.innerHTML = "";
+
+
+  new QRCode(contenedor, {
+
+    text: url.toString(),
+
+    width: 220,
+
+    height: 220
+
+  });
+
+
+  document.getElementById("modalQR").style.display = "flex";
+
+}
+
+
+function cerrarModalQR(){
+
+  document.getElementById("modalQR").style.display = "none";
+
+}
+
+
+function cerrarModalQRFondo(e){
+
+  if(e.target.id==="modalQR") cerrarModalQR();
+
+}
+
+
+</script>
+
+
+</body>
+</html>
