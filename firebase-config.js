@@ -13,10 +13,34 @@ const firebaseConfig = {
 };
 
 
-firebase.initializeApp(firebaseConfig);
 
-const db = firebase.firestore();
-const auth = firebase.auth();
+/* ⚠️ IMPORTANTE: usamos DOS apps de Firebase independientes en vez de
+   una sola, aunque apunten al mismo proyecto.
+
+   Motivo: Firebase Auth comparte la sesión entre TODAS las pestañas
+   del mismo navegador que usen la misma app. Si el público inicia
+   sesión con Google en index.html mientras el operador tiene
+   control.html o dashboard.html abiertos en otra pestaña, esa pestaña
+   detecta "esta cuenta no es el operador" y cierra la sesión — y como
+   antes compartían la misma app, eso desloguéaba también al público.
+
+   Con dos apps separadas, cada una tiene su propia sesión aislada:
+   - "publico"  → la usan index.html (y de lectura, overlay.html)
+   - "operador" → la usan control.html y dashboard.html
+
+   Así una nunca puede cerrarle la sesión a la otra. */
+
+
+const appPublico = firebase.initializeApp(firebaseConfig, "publico");
+
+const auth = appPublico.auth();
+const db = appPublico.firestore();
+
+
+const appOperador = firebase.initializeApp(firebaseConfig, "operador");
+
+const authOperador = appOperador.auth();
+const dbOperador = appOperador.firestore();
 
 
 
@@ -54,31 +78,38 @@ function obtenerEventoId(){
 const EVENTO_ID = obtenerEventoId();
 
 
-function refMensajes(){
 
-  return db.collection("eventos").doc(EVENTO_ID).collection("mensajes");
+/* Estas 4 funciones aceptan opcionalmente qué base de datos usar
+   (db normal, o dbOperador). Si no se indica, usan "db" (la pública) —
+   así index.html y overlay.html no tienen que cambiar nada.
+   control.html y dashboard.html SIEMPRE deben pasar dbOperador. */
+
+
+function refMensajes(baseDeDatos){
+
+  return (baseDeDatos || db).collection("eventos").doc(EVENTO_ID).collection("mensajes");
 
 }
 
 
-function refEnVivo(){
+function refEnVivo(baseDeDatos){
 
-  return db.collection("eventos").doc(EVENTO_ID).collection("en_vivo").doc("actual");
+  return (baseDeDatos || db).collection("eventos").doc(EVENTO_ID).collection("en_vivo").doc("actual");
 
 }
 
 
 /* Colección raíz de eventos (para el dashboard: listar/crear eventos) */
 
-function refEventos(){
+function refEventos(baseDeDatos){
 
-  return db.collection("eventos");
+  return (baseDeDatos || db).collection("eventos");
 
 }
 
 
-function refEvento(id){
+function refEvento(id, baseDeDatos){
 
-  return db.collection("eventos").doc(id);
+  return (baseDeDatos || db).collection("eventos").doc(id);
 
 }
