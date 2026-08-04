@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Participa - La Óxido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="publico">
+
+
+<nav class="navPublico">
+
+<span id="insigniaEventoPublico" class="insigniaEvento"></span>
+
+<a href="dashboard.html" class="enlaceModeracion">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+Acceso moderación
+</a>
+
+</nav>
+
+
+<div class="contenedorPublico">
+
+<div class="tarjetaPublico">
+
+<img src="logo.png" class="logoPublico">
+
+<h1>🎤 ¡Participa!</h1>
+
+<p class="subtitulo">Tu mensaje puede aparecer en pantalla</p>
+
+
+<!-- ========= PASO 1: LOGIN CON GOOGLE (obligatorio) ========= -->
+
+<div id="pPasoLogin">
+
+<button type="button" id="pBotonGoogle" class="botonGoogle botonAncho">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+Continuar con Google
+</button>
+
+<p class="notaGoogle">Necesitamos que inicies sesión con Google para poder enviar tu mensaje (así evitamos el spam). No hace falta registrarse, es tu cuenta de Google de siempre.</p>
+
+</div>
+
+
+<!-- ========= PASO 2: FORMULARIO (solo tras iniciar sesión) ========= -->
+
+<div id="pPasoFormulario" style="display:none">
+
+<div id="pGoogleConectado" class="googleConectado">
+<img id="pGoogleFoto" class="avatarMini">
+<span id="pGoogleNombre"></span>
+<button type="button" id="pBotonSalir" class="botonSalirGoogle">Cambiar de cuenta</button>
+</div>
+
+
+<form id="formPublico">
+
+<label>Tu mensaje</label>
+
+<textarea id="pMensaje" placeholder="Escribe algo bonito..." maxlength="250" required></textarea>
+
+
+<label>Foto para mostrar (opcional)</label>
+
+<div id="pFotoZona" class="dropzone">
+<img id="pVistaFoto">
+<span id="pFotoTexto">📸 Toca para elegir</span>
+</div>
+
+<input type="file" id="pArchivoFoto" accept="image/*" style="display:none">
+
+
+<div id="pAviso" class="avisoPublico"></div>
+
+
+<button type="submit" id="pBotonEnviar" class="mostrar botonAncho">
+💬 ENVIAR
+</button>
+
+</form>
+
+</div>
+
+
+<div id="pConfirmacion" class="confirmacionPublico">
+
+✅ ¡Enviado! Tu mensaje está en revisión y puede aparecer en pantalla en cualquier momento.
+
+</div>
+
+</div>
+
+</div>
+
+
+<footer class="piePublico">
+
+<img src="logo_lafiesta.png" class="logoPie" alt="Espectáculos La Fiesta">
+
+<div class="piePublicoDatos">
+
+<div class="piePublicoItem">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+<span>Calle del Pedró, 24, 46270<br>Villanueva de Castellón<br>València</span>
+</div>
+
+<div class="piePublicoItem">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.62 1.184l-.462.428a1 1 0 0 0-.271 1.113 12.04 12.04 0 0 0 7.185 7.185"></path></svg>
+<span>+34 962 450 999</span>
+</div>
+
+</div>
+
+<div class="piePublicoRedes">
+
+<a href="#" class="piePublicoIcono" aria-label="Facebook">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.87v-6.98H7.9V12h2.5V9.8c0-2.47 1.47-3.84 3.72-3.84 1.08 0 2.2.19 2.2.19v2.43h-1.24c-1.22 0-1.6.76-1.6 1.53V12h2.72l-.44 2.89h-2.28v6.98A10 10 0 0 0 22 12Z"></path></svg>
+</a>
+
+<a href="#" class="piePublicoIcono" aria-label="Instagram">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>
+</a>
+
+<a href="#" class="piePublicoIcono" aria-label="YouTube">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24 24 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49 49 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24 24 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49 49 0 0 1-16.2 0A2 2 0 0 1 2.5 17Z"></path><path d="m10 15 5-3-5-3z"></path></svg>
+</a>
+
+</div>
+
+<p class="piePublicoCopy">© <span id="anioActual"></span> La Óxido. Todos los derechos reservados.</p>
+
+</footer>
+
+
+
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="moderacion.js"></script>
+<script src="utilidades-imagen.js"></script>
+
+
+<script>
+
+
+let pFotoBase64 = null;
+
+
+document.getElementById("insigniaEventoPublico").textContent = "Evento: " + EVENTO_ID;
+
+document.getElementById("anioActual").textContent = new Date().getFullYear();
+
+
+
+/* ==================================
+   LOGIN CON GOOGLE (obligatorio para poder enviar)
+   ================================== */
+
+
+auth.onAuthStateChanged(usuario=>{
+
+  if(usuario){
+
+    document.getElementById("pPasoLogin").style.display = "none";
+
+    document.getElementById("pPasoFormulario").style.display = "block";
+
+    document.getElementById("pGoogleFoto").src = usuario.photoURL || "";
+
+    document.getElementById("pGoogleNombre").textContent = usuario.displayName || "Sin nombre";
+
+  }else{
+
+    document.getElementById("pPasoLogin").style.display = "block";
+
+    document.getElementById("pPasoFormulario").style.display = "none";
+
+  }
+
+});
+
+
+
+document.getElementById("pBotonGoogle").onclick = async () => {
+
+  let boton = document.getElementById("pBotonGoogle");
+
+  boton.disabled = true;
+
+  try{
+
+    let proveedor = new firebase.auth.GoogleAuthProvider();
+
+    proveedor.setCustomParameters({prompt: "select_account"});
+
+    await auth.signInWithPopup(proveedor);
+
+  }catch(err){
+
+    console.error(err);
+
+    alert("No se pudo iniciar sesión con Google. Inténtalo de nuevo.");
+
+  }
+
+  boton.disabled = false;
+
+};
+
+
+
+document.getElementById("pBotonSalir").onclick = () => {
+
+  auth.signOut();
+
+};
+
+
+
+
+/* ---------- Subida de foto para mostrar ---------- */
+
+
+document.getElementById("pFotoZona").onclick = () => {
+
+  document.getElementById("pArchivoFoto").click();
+
+};
+
+
+document.getElementById("pArchivoFoto").onchange = async (e) => {
+
+  let archivo = e.target.files[0];
+
+  if(!archivo) return;
+
+  pFotoBase64 = await redimensionarImagen(archivo, 900, 0.6);
+
+  let vista = document.getElementById("pVistaFoto");
+
+  vista.src = pFotoBase64;
+
+  vista.style.display = "block";
+
+  document.getElementById("pFotoTexto").style.display = "none";
+
+};
+
+
+
+
+/* ---------- Envío ---------- */
+
+
+const CLAVE_ULTIMO_ENVIO = "oxido_ultimo_envio_" + EVENTO_ID;
+
+const ESPERA_MS = 15000;
+
+
+
+document.getElementById("formPublico").addEventListener("submit", async (e) => {
+
+  e.preventDefault();
+
+
+  let usuario = auth.currentUser;
+
+  if(!usuario){
+
+    mostrarAviso("Tienes que iniciar sesión con Google primero.");
+
+    return;
+
+  }
+
+
+  let ultimoEnvio = Number(localStorage.getItem(CLAVE_ULTIMO_ENVIO) || 0);
+
+  if(Date.now() - ultimoEnvio < ESPERA_MS){
+
+    mostrarAviso("Espera unos segundos antes de enviar otro mensaje 🙂");
+
+    return;
+
+  }
+
+
+  let mensaje = document.getElementById("pMensaje").value.trim();
+
+
+  if(!mensaje){
+
+    mostrarAviso("Escribe un mensaje.");
+
+    return;
+
+  }
+
+
+  let palabras = cargarPalabrasProhibidas();
+
+  let encontrada = detectarPalabraProhibida(mensaje, palabras);
+
+
+  if(encontrada){
+
+    mostrarAviso("Tu mensaje parece contener contenido no permitido. Revísalo, por favor.");
+
+    return;
+
+  }
+
+
+  let boton = document.getElementById("pBotonEnviar");
+
+  boton.disabled = true;
+
+  boton.textContent = "Enviando...";
+
+
+  try{
+
+    await refMensajes().add({
+
+      nombre: usuario.displayName || "Sin nombre",
+
+      avatar: usuario.photoURL || null,
+
+      texto: mensaje,
+
+      imagen: pFotoBase64,
+
+      estado: "pendiente",
+
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+
+    localStorage.setItem(CLAVE_ULTIMO_ENVIO, String(Date.now()));
+
+
+    document.getElementById("pPasoFormulario").style.display = "none";
+
+    document.getElementById("pConfirmacion").style.display = "block";
+
+
+  }catch(err){
+
+    console.error(err);
+
+    mostrarAviso("No se pudo enviar (" + err.message + "). Comprueba tu conexión e inténtalo de nuevo.");
+
+    boton.disabled = false;
+
+    boton.textContent = "💬 ENVIAR";
+
+  }
+
+
+});
+
+
+
+function mostrarAviso(texto){
+
+  let aviso = document.getElementById("pAviso");
+
+  aviso.textContent = texto;
+
+  aviso.style.display = "block";
+
+}
+
+
+</script>
+
+
+</body>
+</html>
