@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Overlay OBS Orquesta</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body class="overlay">
+
+
+<div id="escenario"></div>
+
+<div id="insigniaEventoOverlay" class="insigniaEventoOverlay"></div>
+
+
+
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="moderacion.js"></script>
+<script src="avatar.js"></script>
+
+
+<script>
+
+
+const escenario =
+document.getElementById("escenario");
+
+
+if(new URLSearchParams(window.location.search).get("debug")){
+
+  document.getElementById("insigniaEventoOverlay").textContent = "Evento: " + EVENTO_ID;
+
+  document.getElementById("insigniaEventoOverlay").style.display = "block";
+
+}
+
+
+let ultimoNonce = null;
+
+
+let ESTILO_ACTUAL = {
+
+  estilo: "clasico",   // "clasico" | "popup"
+
+  fondo: "negro",      // "negro" | "gris" | "blanco" | "cristal"
+
+  fuente: "display"    // "display" (Bebas Neue) | "texto" (Inter)
+
+};
+
+
+refEstilo().onSnapshot(snap=>{
+
+  if(snap.exists){
+
+    ESTILO_ACTUAL = Object.assign(
+      {estilo:"clasico", fondo:"negro", fuente:"display"},
+      snap.data()
+    );
+
+  }
+
+}, err=>{
+
+  console.error("Error escuchando el estilo:", err);
+
+});
+
+
+
+refEnVivo().onSnapshot(snap=>{
+
+  if(!snap.exists) return;
+
+  let d = snap.data();
+
+  if(!d.nonce || d.nonce === ultimoNonce) return;
+
+  ultimoNonce = d.nonce;
+
+
+  if(d.tipo==="mensaje"){
+
+    mostrarMensaje(d);
+
+  }
+
+
+  if(d.tipo==="qr"){
+
+    mostrarQR(d);
+
+  }
+
+
+  if(d.tipo==="reaccion"){
+
+    mostrarReaccion(d);
+
+  }
+
+
+  if(d.tipo==="foto"){
+
+    mostrarFoto(d);
+
+  }
+
+
+  if(d.tipo==="emoji_lluvia"){
+
+    lluviaEmoji(d.emoji);
+
+  }
+
+
+  if(d.tipo==="limpiar"){
+
+    limpiar();
+
+  }
+
+
+}, err=>{
+
+  console.error("Error escuchando Firestore:", err);
+
+});
+
+
+
+const CIRCUNFERENCIA_ARO = 2 * Math.PI * 46;
+
+
+/* Avatar + aro que se vacía en sentido horario según "duracion"
+   (en segundos) — así el público ve cuánto le queda a ese mensaje. */
+
+function avatarConAro(d, duracion){
+
+
+  if(!d.avatar && !d.nombre){
+
+    return "";
+
+  }
+
+
+  let avatarBloque = avatarHTML(d.avatar, d.nombre, "avatarOverlay", "avatarOverlayInicial");
+
+
+  let aro = (duracion && duracion > 0) ? `
+  <svg class="aroProgreso" viewBox="0 0 100 100">
+  <circle class="aroProgresoCirculo" cx="50" cy="50" r="46" style="animation-duration:${duracion}s"></circle>
+  </svg>
+  ` : "";
+
+
+  return `<div class="avatarAro">${aro}${avatarBloque}</div>`;
+
+}
+
+
+function claseFondo(){
+
+  return "fondo-" + (ESTILO_ACTUAL.fondo || "negro");
+
+}
+
+
+function claseFuente(){
+
+  return "fuente-" + (ESTILO_ACTUAL.fuente || "display");
+
+}
+
+
+
+
+
+function mostrarMensaje(d){
+
+
+let duracion = (typeof d.tiempo==="number" ? d.tiempo : 8);
+
+
+limpiar();
+
+
+let caja=document.createElement("div");
+
+
+let esPopup = ESTILO_ACTUAL.estilo === "popup";
+
+
+caja.className = (esPopup ? "cartelPopup" : "cartel") + " entrada " + claseFondo() + " " + claseFuente();
+
+
+
+if(esPopup){
+
+
+caja.innerHTML=`
+
+${avatarConAro(d, duracion)}
+
+<div class="popupContenido">
+
+${d.nombre ? `<div class="nombreOverlay popupNombre">${escapeHTML(d.nombre)}</div>` : ""}
+
+<div class="texto popupTexto">${escapeHTML(d.texto)}</div>
+
+${d.imagen ? `<img class="fotoMensaje popupFoto" src="${d.imagen}">` : ""}
+
+</div>
+
+`;
+
+
+}else{
+
+
+caja.innerHTML=`
+
+${avatarConAro(d, duracion)}
+
+${d.nombre ? `<div class="nombreOverlay">${escapeHTML(d.nombre)}</div>` : ""}
+
+${d.imagen ? `<img class="fotoMensaje" src="${d.imagen}">` : ""}
+
+<div class="texto">
+${escapeHTML(d.texto)}
+</div>
+
+`;
+
+
+}
+
+
+
+escenario.appendChild(caja);
+
+
+if(!esPopup){
+
+ajustarTexto(
+caja.querySelector(".texto")
+);
+
+}
+
+
+
+setTimeout(()=>{
+
+if(caja.parentNode){
+
+limpiar();
+
+}
+
+},duracion*1000);
+
+
+
+}
+
+
+
+
+/* El QR es el único contenido que se muestra SIEMPRE en formato
+   popup y SIN avatar/nombre — el título y subtítulo ya van
+   dibujados dentro de la propia imagen. */
+
+function mostrarQR(d){
+
+  let duracion = (typeof d.tiempo==="number" ? d.tiempo : 8);
+
+
+  limpiar();
+
+
+  let caja = document.createElement("div");
+
+  caja.className = "cartelQR entrada " + claseFondo() + " " + claseFuente();
+
+
+  caja.innerHTML = `<img class="imagenQROverlay" src="${d.imagen}">`;
+
+
+  escenario.appendChild(caja);
+
+
+  setTimeout(()=>{
+
+    if(caja.parentNode){
+
+      limpiar();
+
+    }
+
+  },duracion*1000);
+
+}
+
+
+
+
+function mostrarReaccion(d){
+
+
+limpiar();
+
+
+let caja=document.createElement("div");
+
+
+caja.className = "cartel entrada " + claseFondo() + " " + claseFuente();
+
+
+
+caja.innerHTML=`
+
+${avatarConAro(d, 6)}
+
+${d.nombre ? `<div class="nombreOverlay">${escapeHTML(d.nombre)}</div>` : ""}
+
+<div class="emojiGrande">
+${d.emoji}
+</div>
+
+<div class="texto">
+${escapeHTML(d.texto)}
+</div>
+
+`;
+
+
+
+escenario.appendChild(caja);
+
+
+setTimeout(()=>{
+
+if(caja.parentNode){
+
+limpiar();
+
+}
+
+},6000);
+
+
+}
+
+
+function ajustarTexto(t){
+
+
+let tamaño=100;
+
+
+t.style.fontSize=tamaño+"px";
+
+
+while(
+t.scrollHeight>240 &&
+tamaño>20
+){
+
+tamaño-=5;
+
+t.style.fontSize=tamaño+"px";
+
+}
+
+
+}
+
+
+
+
+
+function lluviaEmoji(e){
+
+
+limpiar();
+
+
+
+for(let i=0;i<100;i++){
+
+
+let emoji=document.createElement("div");
+
+
+emoji.className="emoji";
+
+
+emoji.innerText=e;
+
+
+emoji.style.left=
+Math.random()*100+"vw";
+
+
+emoji.style.fontSize=
+40+Math.random()*80+"px";
+
+
+emoji.style.animationDuration=
+3+Math.random()*5+"s";
+
+
+
+escenario.appendChild(emoji);
+
+
+}
+
+
+
+setTimeout(()=>{
+
+limpiar();
+
+},12000);
+
+
+}
+
+
+
+
+
+
+function mostrarFoto(d){
+
+
+limpiar();
+
+
+let contenedor=document.createElement("div");
+
+contenedor.className="entrada";
+
+contenedor.style.display="flex";
+
+contenedor.style.flexDirection="column";
+
+contenedor.style.alignItems="center";
+
+
+let img=document.createElement("img");
+
+
+img.src=d.imagen;
+
+
+img.className="fotoGrande";
+
+
+contenedor.appendChild(img);
+
+
+if(d.nombre){
+
+let credito=document.createElement("div");
+
+credito.className="nombreOverlay creditoFoto";
+
+credito.textContent=d.nombre;
+
+contenedor.appendChild(credito);
+
+}
+
+
+escenario.appendChild(contenedor);
+
+
+}
+
+
+
+
+
+
+function limpiar(){
+
+escenario.innerHTML="";
+
+}
+
+
+</script>
+
+
+</body>
+</html>
