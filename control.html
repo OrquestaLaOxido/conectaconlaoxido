@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Óxido - Control Visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="control">
+
+
+<!-- ========= NAV (siempre visible) ========= -->
+
+<nav class="navPrincipal" id="navPrincipal">
+
+<div class="navMarca">
+<img src="logo.png" class="navLogo">
+<span class="navTitulo">LA ÓXIDO</span>
+</div>
+
+<button class="navLogin" onclick="abrirModalLogin()">Iniciar sesión</button>
+
+</nav>
+
+<div class="navFranja"></div>
+
+
+
+<!-- ========= LANDING (visible sin sesión iniciada) ========= -->
+
+<div id="landing" class="landing">
+
+<section class="hero">
+
+<span class="heroEyebrow">CONTROL VISUAL EN DIRECTO</span>
+
+<h1 class="heroTitulo">
+El público habla.<br>
+<span class="heroAccent">Tú decides qué se ve.</span>
+</h1>
+
+<p class="heroTexto">
+Mensajes, fotos y reacciones del público, moderados en tiempo real
+y proyectados al instante en la pantalla del concierto.
+</p>
+
+</section>
+
+
+<section class="pasos">
+
+<div class="paso">
+<span class="pasoNum">01</span>
+<h3>El público escanea un QR</h3>
+<p>Desde su móvil, sin instalar nada. Inicia sesión con Google (así evitamos el spam) y manda su mensaje.</p>
+</div>
+
+<div class="paso">
+<span class="pasoNum">02</span>
+<h3>Tú lo revisas</h3>
+<p>Cada mensaje pasa por tu bandeja de moderación antes de salir a pantalla.</p>
+</div>
+
+<div class="paso">
+<span class="pasoNum">03</span>
+<h3>Sale en directo</h3>
+<p>Apruébalo y aparece al instante en el overlay proyectado.</p>
+</div>
+
+</section>
+
+</div>
+
+
+
+<!-- ========= MODAL LOGIN ========= -->
+
+<div id="modalLogin" class="modalFondo" style="display:none" onclick="cerrarModalLoginFondo(event)">
+
+<div class="modalLogin">
+
+<button class="modalCerrar" onclick="cerrarModalLogin()">✕</button>
+
+<h2>Acceso de moderación</h2>
+
+<input id="loginEmail" type="email" placeholder="Email">
+
+<input id="loginPass" type="password" placeholder="Contraseña">
+
+<button class="mostrar botonAncho" onclick="iniciarSesion()">Entrar</button>
+
+<div id="loginError" class="avisoPublico"></div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========= MODAL CONFIGURACIÓN ========= -->
+
+<div id="modalConfiguracion" class="modalFondo" style="display:none" onclick="cerrarModalConfiguracionFondo(event)">
+
+<div class="modalLogin modalAncho">
+
+<button class="modalCerrar" onclick="cerrarModalConfiguracion()">✕</button>
+
+<h2>⚙️ Configuración</h2>
+
+<label class="etiquetaQR">Modo de reproducción en Overlay</label>
+
+<label class="opcionRadio">
+<input type="radio" name="modoReproduccion" id="modoManual" value="manual">
+Manual — pulsas "▶️ Mostrar" en la cola de visualización
+</label>
+
+<label class="opcionRadio">
+<input type="radio" name="modoReproduccion" id="modoAutomatica" value="automatica">
+Automática — sale en pantalla en cuanto lo apruebas
+</label>
+
+
+<label class="etiquetaSlider" style="margin-top:20px">
+⏱️ Duración de los mensajes en overlay: <span id="configDuracionValor">8s</span>
+</label>
+
+<input id="configDuracion" type="range" min="0" max="20" step="1" value="8" class="sliderTiempo" oninput="document.getElementById('configDuracionValor').textContent = this.value + 's'">
+
+
+<hr class="separadorModal">
+
+<label class="etiquetaQR">🎨 Colores de mensajes y fuentes</label>
+
+<label class="etiquetaSlider">Estilo del mensaje</label>
+
+<select id="configEstiloMensaje" class="selectConfig">
+<option value="clasico">Clásico (cartel actual)</option>
+<option value="popup">PopUp — notificación tipo smartphone</option>
+</select>
+
+<label class="etiquetaSlider">Fondo del mensaje</label>
+
+<select id="configFondoMensaje" class="selectConfig">
+<option value="negro">Negro</option>
+<option value="gris">Gris</option>
+<option value="blanco">Blanco</option>
+<option value="cristal">Cristal (semitransparente)</option>
+</select>
+
+<label class="etiquetaSlider">Fuente del texto</label>
+
+<select id="configFuenteMensaje" class="selectConfig">
+<option value="display">Bebas Neue (llamativa, la actual)</option>
+<option value="texto">Inter (clásica, más legible)</option>
+</select>
+
+<p class="notaQR">Estos 3 ajustes se guardan en el evento (Firestore), así que se aplican en el overlay esté en el ordenador que esté — no dependen de este navegador.</p>
+
+
+<div class="filaBotonesModal">
+<button class="limpiar" onclick="cerrarModalConfiguracion()">Cancelar</button>
+<button class="mostrar" onclick="guardarConfiguracion()">💾 Guardar</button>
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========= PANEL (oculto hasta iniciar sesión) ========= -->
+
+<div id="panelPrincipal" class="conSidebar" style="display:none">
+
+
+<aside class="sidebar">
+
+<div class="sidebarLogo">
+<img src="logo.png" class="sidebarLogoImg">
+</div>
+
+<button class="sidebarBtn sidebarBtnCrear" onclick="window.location.href='dashboard.html?crear=1'">+ Crear evento</button>
+
+<a href="dashboard.html" class="sidebarBtn">📋 Dashboard</a>
+
+<button class="sidebarBtn" onclick="mostrarOverlay()">🖥️ Mostrar Overlay</button>
+
+<button class="sidebarBtn" onclick="abrirModalConfiguracion()">⚙️ Configuración</button>
+
+<span id="insigniaEvento" class="insigniaEvento insigniaSidebar"></span>
+
+<button class="sidebarBtn sidebarSalir" onclick="cerrarSesion()">🚪 Cerrar sesión</button>
+
+<p class="sidebarCopy">© <span id="anioActual"></span> La Óxido</p>
+
+</aside>
+
+
+<main class="contenidoPrincipal">
+
+
+<h1 class="tituloContenido">🎤 Control Visual Orquesta</h1>
+
+
+<section class="panel">
+
+
+<div class="bloque">
+
+<h2>🔗 Acceso del público</h2>
+
+<p id="enlacePublico" class="enlacePublico"></p>
+
+<div id="qrContenedor"></div>
+
+<p class="notaQR">Proyecta o imprime este QR para que el público participe desde el móvil.</p>
+
+<label class="etiquetaQR">Título a mostrar en el QR</label>
+
+<input id="qrTituloControl" placeholder="Título del evento">
+
+<label class="etiquetaQR">Texto adicional (opcional)</label>
+
+<input id="qrSubtituloControl" placeholder="Ej: ¡Escanea y participa!">
+
+<button class="mostrar botonAncho" onclick="mostrarQREnOverlay()">📺 Mostrar QR en Overlay</button>
+
+<button class="fotoBtn botonAncho" onclick="descargarQRControl()">⬇️ Descargar QR</button>
+
+</div>
+
+
+
+<div class="bloque bloqueVistaPrevia">
+
+<h2>🖥️ Vista previa en directo</h2>
+
+<div class="pantallaVistaPrevia">
+<iframe id="iframeVistaPrevia" title="Vista previa del overlay"></iframe>
+</div>
+
+<p class="notaQR">Esto es exactamente lo que se está viendo en <code>overlay.html</code> ahora mismo (fondo verde = croma, es normal).</p>
+
+</div>
+
+
+
+<div class="bloque bloqueAncho">
+
+<h2>📥 Mensajes del público (pendientes de revisar)</h2>
+
+<div id="colaPendientes">
+<p class="vacio">Cargando...</p>
+</div>
+
+</div>
+
+
+
+<div class="bloque bloqueAncho">
+
+<h2>🎬 Cola de visualización</h2>
+
+<p class="notaQR">Mensajes ya aprobados, esperando a que los saques en pantalla.</p>
+
+<div id="colaVisualizacion">
+<p class="vacio">Cargando...</p>
+</div>
+
+</div>
+
+
+
+<div class="bloque">
+
+<h2>✍️ Mensaje manual</h2>
+
+<input id="nombre" placeholder="Nombre a mostrar">
+
+<div id="avatarZona" class="dropzone">
+<img id="vistaAvatar">
+<span id="avatarTexto">📷 Foto de perfil (opcional)</span>
+</div>
+
+<input type="file" id="archivoAvatar" accept="image/*" style="display:none">
+
+<textarea id="mensaje" placeholder="Mensaje"></textarea>
+
+<p class="notaQR">⏱️ La duración en pantalla se ajusta desde ⚙️ Configuración (menú lateral).</p>
+
+<button class="mostrar" onclick="mostrarMensajeManual()">💬 MOSTRAR</button>
+<button class="limpiar" onclick="limpiarOverlay()">❌ LIMPIAR</button>
+
+</div>
+
+
+
+<div class="bloque">
+
+<h2>❤️ Reacciones</h2>
+
+<div class="reacciones">
+<button onclick="reaccion('❤️')">❤️</button>
+<button onclick="reaccion('🔥')">🔥</button>
+<button onclick="reaccion('👏')">👏</button>
+<button onclick="reaccion('🎉')">🎉</button>
+<button onclick="reaccion('⭐')">⭐</button>
+<button onclick="reaccion('😍')">😍</button>
+</div>
+
+<h3>🌧️ Lluvia de emojis</h3>
+
+<div class="reacciones">
+<button onclick="lluviaEmoji('❤️')">🌧️❤️</button>
+<button onclick="lluviaEmoji('🔥')">🌧️🔥</button>
+<button onclick="lluviaEmoji('👏')">🌧️👏</button>
+<button onclick="lluviaEmoji('🎉')">🌧️🎉</button>
+<button onclick="lluviaEmoji('⭐')">🌧️⭐</button>
+</div>
+
+</div>
+
+
+
+<div class="bloque">
+
+<h2>📸 Foto directa</h2>
+
+<div id="zonaFoto" class="dropzone">
+📸<br>ARRASTRA UNA FOTO AQUÍ
+</div>
+
+<input type="file" id="archivoFoto" accept="image/*" style="display:none">
+
+<img id="vistaFoto">
+
+<br>
+
+<label class="checkRow">
+<input type="checkbox" id="fotoApta">
+✅ Foto revisada, apta para mostrar
+</label>
+
+<button class="fotoBtn" onclick="mostrarFotoDirecta()" disabled>📸 MOSTRAR FOTO</button>
+
+</div>
+
+
+
+<div class="bloque">
+
+<h2>🛡️ Filtro de palabras</h2>
+
+<label class="checkRow">
+<input type="checkbox" id="modActiva" checked>
+Marcar mensajes con posibles palabras prohibidas
+</label>
+
+<h3>Palabras prohibidas</h3>
+
+<textarea id="listaProhibidas" placeholder="palabra1, palabra2, palabra3"></textarea>
+
+<button class="fotoBtn" onclick="guardarPalabras()">💾 Guardar lista</button>
+
+</div>
+
+
+</section>
+
+
+</main>
+
+
+</div>
+
+
+
+
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="moderacion.js"></script>
+<script src="utilidades-imagen.js"></script>
+<script src="avatar.js"></script>
+<script src="qr-utils.js"></script>
+
+
+<script>
+
+
+/* ==================================
+   LOGIN
+   ================================== */
+
+
+document.getElementById("anioActual").textContent = new Date().getFullYear();
+
+
+authOperador.onAuthStateChanged(async usuario=>{
+
+  if(usuario && !(await esCuentaDeOperador(usuario))){
+
+    // Es una cuenta real pero NO autorizada como operador
+    // (p.ej. alguien del público que inició sesión con Google
+    // en esta misma pestaña/navegador). La echamos fuera.
+    authOperador.signOut();
+
+    document.getElementById("loginError").textContent =
+      "Esa cuenta no tiene permisos de moderación.";
+
+    document.getElementById("loginError").style.display = "block";
+
+    return;
+
+  }
+
+
+  if(usuario){
+
+    document.getElementById("navPrincipal").style.display="none";
+
+    document.getElementById("landing").style.display="none";
+
+    cerrarModalLogin();
+
+    document.getElementById("panelPrincipal").style.display="flex";
+
+    iniciarPanel();
+
+  }else{
+
+    document.getElementById("navPrincipal").style.display="flex";
+
+    document.getElementById("landing").style.display="block";
+
+    document.getElementById("panelPrincipal").style.display="none";
+
+  }
+
+});
+
+
+
+
+function abrirModalLogin(){
+
+  document.getElementById("modalLogin").style.display="flex";
+
+}
+
+
+function cerrarModalLogin(){
+
+  document.getElementById("modalLogin").style.display="none";
+
+}
+
+
+function cerrarModalLoginFondo(e){
+
+  if(e.target.id==="modalLogin"){
+
+    cerrarModalLogin();
+
+  }
+
+}
+
+
+
+function iniciarSesion(){
+
+  let email = document.getElementById("loginEmail").value;
+
+  let pass = document.getElementById("loginPass").value;
+
+  document.getElementById("loginError").style.display="none";
+
+  authOperador.signInWithEmailAndPassword(email, pass)
+  .catch(err=>{
+
+    let error = document.getElementById("loginError");
+
+    error.textContent = "No se pudo iniciar sesión: " + err.message;
+
+    error.style.display="block";
+
+  });
+
+}
+
+
+
+function cerrarSesion(){
+
+  authOperador.signOut();
+
+}
+
+
+
+
+let panelIniciado = false;
+
+
+function iniciarPanel(){
+
+  if(panelIniciado) return;
+
+  panelIniciado = true;
+
+
+  document.getElementById("insigniaEvento").textContent = "Evento: " + EVENTO_ID;
+
+
+  mostrarEnlaceYQR();
+
+  cargarListaPalabras();
+
+  escucharPendientes();
+
+  escucharCola();
+
+}
+
+
+
+
+/* ==================================
+   ENLACE + QR
+   ================================== */
+
+
+function mostrarEnlaceYQR(){
+
+  let url = new URL("index.html", window.location.href);
+
+  url.searchParams.set("evento", EVENTO_ID);
+
+
+  document.getElementById("enlacePublico").textContent = url.toString();
+
+
+  new QRCode(document.getElementById("qrContenedor"), {
+
+    text: url.toString(),
+
+    width: 220,
+
+    height: 220
+
+  });
+
+
+  let urlOverlay = new URL("overlay.html", window.location.href);
+
+  urlOverlay.searchParams.set("evento", EVENTO_ID);
+
+  document.getElementById("iframeVistaPrevia").src = urlOverlay.toString();
+
+
+  cargarTextosQR();
+
+}
+
+
+
+
+/* ==================================
+   TÍTULO / SUBTÍTULO DEL QR
+   (guardados en el propio evento, en Firestore, para que
+   control.html y dashboard.html muestren siempre lo mismo)
+   ================================== */
+
+
+function cargarTextosQR(){
+
+  refEvento(EVENTO_ID, dbOperador).get().then(snap=>{
+
+    let d = snap.exists ? snap.data() : {};
+
+    document.getElementById("qrTituloControl").value = d.qrTitulo || d.titulo || "";
+
+    document.getElementById("qrSubtituloControl").value = d.qrSubtitulo || "";
+
+  }).catch(err=>{
+
+    console.error("Error cargando el título del QR:", err);
+
+  });
+
+}
+
+
+function guardarTextosQR(){
+
+  refEvento(EVENTO_ID, dbOperador).set({
+
+    qrTitulo: document.getElementById("qrTituloControl").value.trim(),
+
+    qrSubtitulo: document.getElementById("qrSubtituloControl").value.trim()
+
+  }, {merge:true}).catch(err=>{
+
+    console.error("Error guardando el título del QR:", err);
+
+  });
+
+}
+
+
+document.getElementById("qrTituloControl").addEventListener("change", guardarTextosQR);
+
+document.getElementById("qrSubtituloControl").addEventListener("change", guardarTextosQR);
+
+
+
+
+function descargarQRControl(){
+
+  let canvasQR = document.querySelector("#qrContenedor canvas");
+
+  if(!canvasQR){
+
+    alert("El QR todavía no está listo, espera un segundo e inténtalo de nuevo.");
+
+    return;
+
+  }
+
+
+  dibujarYDescargarQR(
+
+    canvasQR,
+
+    document.getElementById("qrTituloControl").value.trim() || "Evento",
+
+    document.getElementById("qrSubtituloControl").value.trim()
+
+  );
+
+}
+
+
+
+
+function mostrarQREnOverlay(){
+
+  let canvasQR = document.querySelector("#qrContenedor canvas");
+
+  if(!canvasQR){
+
+    alert("El QR todavía no está listo, espera un segundo e inténtalo de nuevo.");
+
+    return;
+
+  }
+
+
+  let titulo = document.getElementById("qrTituloControl").value.trim() || "Evento";
+
+  let subtitulo = document.getElementById("qrSubtituloControl").value.trim();
+
+
+  let canvasFinal = componerCanvasQR(canvasQR, titulo, subtitulo);
+
+
+  publicarEnVivo({
+
+    tipo: "mensaje",
+
+    nombre: null,
+
+    avatar: null,
+
+    texto: "",
+
+    imagen: canvasFinal.toDataURL("image/png"),
+
+    tiempo: obtenerTiempo()
+
+  });
+
+}
+
+
+
+
+/* ==================================
+   FILTRO DE PALABRAS
+   ================================== */
+
+
+function cargarListaPalabras(){
+
+  document.getElementById("listaProhibidas").value =
+  cargarPalabrasProhibidas().join(", ");
+
+}
+
+
+
+function guardarPalabras(){
+
+  let texto = document.getElementById("listaProhibidas").value;
+
+  let lista = texto.split(",").map(p=>p.trim().toLowerCase()).filter(Boolean);
+
+  guardarPalabrasProhibidas(lista);
+
+  alert("Lista guardada (" + lista.length + " términos)");
+
+}
+
+
+
+
+/* ==================================
+   BANDEJA DE MODERACIÓN (mensajes del público)
+   ================================== */
+
+
+function escucharPendientes(){
+
+  refMensajes(dbOperador)
+  .where("estado","==","pendiente")
+  .orderBy("creado","asc")
+  .onSnapshot(snapshot=>{
+
+    renderPendientes(snapshot.docs);
+
+  }, err=>{
+
+    console.error("Error escuchando mensajes:", err);
+
+    document.getElementById("colaPendientes").innerHTML =
+      '<p class="avisoPalabra">⚠️ No se pudieron cargar los mensajes pendientes (' + err.message + '). Revisa que las reglas de Firestore estén publicadas y que tu email de operador esté bien puesto en ellas.</p>';
+
+  });
+
+}
+
+
+
+
+function renderPendientes(docs){
+
+  let cont = document.getElementById("colaPendientes");
+
+  if(docs.length===0){
+
+    cont.innerHTML = '<p class="vacio">No hay mensajes pendientes.</p>';
+
+    return;
+
+  }
+
+
+  cont.innerHTML = "";
+
+
+  docs.forEach(doc=>{
+
+    let d = doc.data();
+
+    let palabra =
+    detectarPalabraProhibida((d.texto||"") + " " + (d.nombre||""), cargarPalabrasProhibidas());
+
+
+    let card = document.createElement("div");
+
+    card.className = "itemPendiente" + (palabra ? " alerta" : "");
+
+
+    card.innerHTML = `
+    ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+    <div class="contenidoPendiente">
+    <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
+    <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
+    ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
+    ${palabra ? `<div class="avisoPalabra">⚠️ posible palabra: "${escapeHTML(palabra)}"</div>` : ""}
+    </div>
+    <div class="accionesPendiente">
+    <button class="mostrar" data-id="${doc.id}" data-accion="aprobar">✅ Aprobar (a la cola)</button>
+    <button class="limpiar" data-id="${doc.id}" data-accion="rechazar">❌ Rechazar</button>
+    </div>
+    `;
+
+
+    cont.appendChild(card);
+
+  });
+
+
+  cont.querySelectorAll("button").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      manejarAccionPendiente(btn.dataset.id, btn.dataset.accion);
+
+    });
+
+  });
+
+}
+
+
+
+
+function manejarAccionPendiente(id, accion){
+
+  let ref = refMensajes(dbOperador).doc(id);
+
+
+  if(accion==="rechazar"){
+
+    ref.update({estado:"rechazado"})
+    .catch(err=>{
+
+      console.error(err);
+
+      alert("No se pudo rechazar: " + err.message);
+
+    });
+
+    return;
+
+  }
+
+
+  if(obtenerModoReproduccion()==="automatica"){
+
+    // Modo automático: en cuanto se aprueba, sale directo en pantalla.
+    publicarMensajeDesdeId(id);
+
+  }else{
+
+    // Modo manual: pasa a la cola de visualización, todavía NO sale en pantalla.
+    ref.update({estado:"en_cola"})
+    .catch(err=>{
+
+      console.error(err);
+
+      alert("No se pudo aprobar: " + err.message);
+
+    });
+
+  }
+
+}
+
+
+
+
+/* Obtiene el mensaje por su ID, lo publica en el overlay,
+   y marca su estado como "mostrado". Lo usan tanto el modo
+   automático (desde pendientes) como el botón manual (desde la cola). */
+
+function publicarMensajeDesdeId(id){
+
+  let ref = refMensajes(dbOperador).doc(id);
+
+  return ref.get().then(snap=>{
+
+    let d = snap.data();
+
+    return publicarEnVivo({
+
+      tipo:"mensaje",
+
+      nombre: d.nombre || "",
+
+      avatar: d.avatar || null,
+
+      texto: d.texto || "",
+
+      imagen: d.imagen || null,
+
+      tiempo: obtenerTiempo()
+
+    }).then(()=>{
+
+      return ref.update({estado:"mostrado"});
+
+    });
+
+  })
+  .catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo mostrar el mensaje: " + err.message);
+
+  });
+
+}
+
+
+
+
+/* ==================================
+   COLA DE VISUALIZACIÓN (mensajes aprobados, esperando salir en pantalla)
+   ================================== */
+
+
+function escucharCola(){
+
+  refMensajes(dbOperador)
+  .where("estado","==","en_cola")
+  .orderBy("creado","asc")
+  .onSnapshot(snapshot=>{
+
+    renderCola(snapshot.docs);
+
+  }, err=>{
+
+    console.error("Error escuchando la cola:", err);
+
+    document.getElementById("colaVisualizacion").innerHTML =
+      '<p class="avisoPalabra">⚠️ No se pudo cargar la cola (' + err.message + ').</p>';
+
+  });
+
+}
+
+
+
+
+function renderCola(docs){
+
+  let cont = document.getElementById("colaVisualizacion");
+
+  if(docs.length===0){
+
+    cont.innerHTML = '<p class="vacio">No hay mensajes en cola.</p>';
+
+    return;
+
+  }
+
+
+  cont.innerHTML = "";
+
+
+  docs.forEach(doc=>{
+
+    let d = doc.data();
+
+
+    let card = document.createElement("div");
+
+    card.className = "itemPendiente";
+
+
+    card.innerHTML = `
+    ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+    <div class="contenidoPendiente">
+    <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
+    <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
+    ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
+    </div>
+    <div class="accionesPendiente">
+    <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
+    <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
+    </div>
+    `;
+
+
+    cont.appendChild(card);
+
+  });
+
+
+  cont.querySelectorAll("button").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      manejarAccionCola(btn.dataset.id, btn.dataset.accion);
+
+    });
+
+  });
+
+}
+
+
+
+
+function manejarAccionCola(id, accion){
+
+  let ref = refMensajes(dbOperador).doc(id);
+
+
+  if(accion==="quitar"){
+
+    ref.update({estado:"rechazado"})
+    .catch(err=>{
+
+      console.error(err);
+
+      alert("No se pudo quitar de la cola: " + err.message);
+
+    });
+
+    return;
+
+  }
+
+
+  publicarMensajeDesdeId(id);
+
+}
+
+
+
+
+/* ==================================
+   PUBLICAR EN VIVO (overlay)
+   ================================== */
+
+
+function publicarEnVivo(datos){
+
+  let paquete = Object.assign({}, datos, {
+
+    nonce: Date.now() + "_" + Math.random(),
+
+    actualizado: firebase.firestore.FieldValue.serverTimestamp()
+
+  });
+
+
+  return refEnVivo(dbOperador).set(paquete)
+  .catch(err=>{
+
+    console.error("Error publicando en vivo:", err);
+
+    alert("⚠️ No se pudo publicar en el overlay: " + err.message);
+
+  });
+
+}
+
+
+
+
+function limpiarOverlay(){
+
+  publicarEnVivo({tipo:"limpiar"});
+
+}
+
+
+
+
+function mostrarOverlay(){
+
+  let url = new URL("overlay.html", window.location.href);
+
+  url.searchParams.set("evento", EVENTO_ID);
+
+  window.open(url.toString(), "overlay_" + EVENTO_ID, "width=1280,height=720");
+
+}
+
+
+
+
+/* ==================================
+   MENSAJE MANUAL (del operador)
+   ================================== */
+
+
+let avatarActual = null;
+
+let fotoActual = null;
+
+
+
+function obtenerNombre(){
+
+  return document.getElementById("nombre").value.trim();
+
+}
+
+
+
+
+/* Configuración persistida en este navegador (modo de reproducción
+   y duración por defecto de los mensajes en el overlay). */
+
+function obtenerTiempo(){
+
+  let guardado = localStorage.getItem("oxido_duracion_default");
+
+  let valor = guardado === null ? 8 : Number(guardado);
+
+  return isNaN(valor) ? 8 : valor;
+
+}
+
+
+function obtenerModoReproduccion(){
+
+  return localStorage.getItem("oxido_modo_reproduccion") || "manual";
+
+}
+
+
+function abrirModalConfiguracion(){
+
+  let modo = obtenerModoReproduccion();
+
+  document.getElementById(modo === "automatica" ? "modoAutomatica" : "modoManual").checked = true;
+
+
+  let duracion = obtenerTiempo();
+
+  document.getElementById("configDuracion").value = duracion;
+
+  document.getElementById("configDuracionValor").textContent = duracion + "s";
+
+
+  // Valores por defecto mientras carga Firestore
+  document.getElementById("configEstiloMensaje").value = "clasico";
+
+  document.getElementById("configFondoMensaje").value = "negro";
+
+  document.getElementById("configFuenteMensaje").value = "display";
+
+
+  refEstilo(EVENTO_ID, dbOperador).get().then(snap=>{
+
+    if(snap.exists){
+
+      let d = snap.data();
+
+      document.getElementById("configEstiloMensaje").value = d.estilo || "clasico";
+
+      document.getElementById("configFondoMensaje").value = d.fondo || "negro";
+
+      document.getElementById("configFuenteMensaje").value = d.fuente || "display";
+
+    }
+
+  }).catch(err=>{
+
+    console.error("Error cargando el estilo:", err);
+
+  });
+
+
+  document.getElementById("modalConfiguracion").style.display = "flex";
+
+}
+
+
+function cerrarModalConfiguracion(){
+
+  document.getElementById("modalConfiguracion").style.display = "none";
+
+}
+
+
+function cerrarModalConfiguracionFondo(e){
+
+  if(e.target.id === "modalConfiguracion") cerrarModalConfiguracion();
+
+}
+
+
+function guardarConfiguracion(){
+
+  let modo = document.querySelector('input[name="modoReproduccion"]:checked').value;
+
+  let duracion = document.getElementById("configDuracion").value;
+
+  localStorage.setItem("oxido_modo_reproduccion", modo);
+
+  localStorage.setItem("oxido_duracion_default", duracion);
+
+
+  refEstilo(EVENTO_ID, dbOperador).set({
+
+    estilo: document.getElementById("configEstiloMensaje").value,
+
+    fondo: document.getElementById("configFondoMensaje").value,
+
+    fuente: document.getElementById("configFuenteMensaje").value,
+
+    actualizado: firebase.firestore.FieldValue.serverTimestamp()
+
+  }).then(()=>{
+
+    cerrarModalConfiguracion();
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo guardar el estilo: " + err.message);
+
+  });
+
+}
+
+
+
+
+function pasaModeracion(campos){
+
+  if(!document.getElementById("modActiva").checked) return true;
+
+  let lista = cargarPalabrasProhibidas();
+
+  for(let campo of campos){
+
+    let encontrada = detectarPalabraProhibida(campo, lista);
+
+    if(encontrada){
+
+      let continuar = confirm(
+      "⚠️ Se detectó una posible palabra no permitida ('" + encontrada + "').\n¿Enviar de todas formas?"
+      );
+
+      if(!continuar) return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+
+
+
+function mostrarMensajeManual(){
+
+  let texto = document.getElementById("mensaje").value;
+
+  let nombre = obtenerNombre();
+
+
+  if(!pasaModeracion([texto, nombre])) return;
+
+
+  publicarEnVivo({
+
+    tipo:"mensaje",
+
+    nombre: nombre,
+
+    avatar: avatarActual,
+
+    texto: texto,
+
+    tiempo: obtenerTiempo()
+
+  });
+
+}
+
+
+
+
+function reaccion(e){
+
+  let frases = {
+
+    "❤️":"SE SIENTE ENAMORADA",
+    "🔥":"ESTÁ EN MODO FIESTA",
+    "👏":"ESTÁ APLAUDIENDO",
+    "🎉":"ESTÁ CELEBRANDO",
+    "⭐":"ENVÍA UNA ESTRELLA",
+    "😍":"ESTÁ ENAMORADO/A"
+
+  };
+
+
+  let nombre = obtenerNombre() || "ALGUIEN";
+
+
+  publicarEnVivo({
+
+    tipo:"reaccion",
+
+    nombre: nombre,
+
+    avatar: avatarActual,
+
+    emoji: e,
+
+    texto: frases[e]
+
+  });
+
+}
+
+
+
+
+function lluviaEmoji(e){
+
+  publicarEnVivo({
+
+    tipo:"emoji_lluvia",
+
+    emoji: e
+
+  });
+
+}
+
+
+
+
+/* ---------- Avatar (mensaje manual) ---------- */
+
+
+const avatarZona = document.getElementById("avatarZona");
+
+const archivoAvatar = document.getElementById("archivoAvatar");
+
+
+avatarZona.onclick = () => archivoAvatar.click();
+
+
+archivoAvatar.onchange = async () => {
+
+  avatarActual = await redimensionarImagen(archivoAvatar.files[0], 400, 0.7);
+
+  vistaAvatar.src = avatarActual;
+
+  vistaAvatar.style.display = "block";
+
+};
+
+
+avatarZona.ondragover = e => e.preventDefault();
+
+
+avatarZona.ondrop = async e => {
+
+  e.preventDefault();
+
+  avatarActual = await redimensionarImagen(e.dataTransfer.files[0], 400, 0.7);
+
+  vistaAvatar.src = avatarActual;
+
+  vistaAvatar.style.display = "block";
+
+};
+
+
+
+
+/* ---------- Foto directa ---------- */
+
+
+const zonaFoto = document.getElementById("zonaFoto");
+
+const archivoFoto = document.getElementById("archivoFoto");
+
+const fotoApta = document.getElementById("fotoApta");
+
+const botonFoto = document.querySelector(".fotoBtn");
+
+
+zonaFoto.onclick = () => archivoFoto.click();
+
+
+archivoFoto.onchange = () => cargarFotoDirecta(archivoFoto.files[0]);
+
+
+zonaFoto.ondragover = e => e.preventDefault();
+
+zonaFoto.ondrop = e => {
+
+  e.preventDefault();
+
+  cargarFotoDirecta(e.dataTransfer.files[0]);
+
+};
+
+
+fotoApta.addEventListener("change", () => {
+
+  botonFoto.disabled = !fotoApta.checked;
+
+});
+
+
+
+async function cargarFotoDirecta(archivo){
+
+  if(!archivo) return;
+
+  fotoActual = await redimensionarImagen(archivo, 900, 0.6);
+
+  vistaFoto.src = fotoActual;
+
+  vistaFoto.style.display = "block";
+
+  fotoApta.checked = false;
+
+  botonFoto.disabled = true;
+
+}
+
+
+
+function mostrarFotoDirecta(){
+
+  if(!fotoActual || !fotoApta.checked) return;
+
+  publicarEnVivo({
+
+    tipo:"foto",
+
+    imagen: fotoActual,
+
+    nombre: obtenerNombre()
+
+  });
+
+  fotoApta.checked = false;
+
+  botonFoto.disabled = true;
+
+}
+
+
+</script>
+
+
+</body>
+</html>
