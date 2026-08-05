@@ -68,7 +68,9 @@ async function esCuentaDeOperador(usuario){
 
   if(!usuario) return false;
 
-  let resultado = await usuario.getIdTokenResult();
+  // El "true" fuerza a pedir el permiso actualizado al servidor,
+  // en vez de fiarse de una copia guardada en el navegador.
+  let resultado = await usuario.getIdTokenResult(true);
 
   return resultado.claims.moderador === true;
 
