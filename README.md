@@ -184,6 +184,9 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
 | Custom claim / seguridad del operador | V1.1 |
 | Estilos configurables (clásico/PopUp) | V1.1 |
 | QR publicable en overlay | V1.1 |
+| Aro de cuenta atrás en el avatar | V1.1 |
+| Pie de página con datos de contacto/redes | V1.1 |
+| Aviso de privacidad antes del login | V1.1 |
 | Tiempo de espera configurable | V1.2 |
 | Lluvia de emojis del público | V1.2 |
 | Participantes (silenciar/banear) | V1.2 |
@@ -191,6 +194,9 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
 | Sorteo con ruleta y confeti | V1.2 |
 | Activar/desactivar eventos | V1.2 |
 | Cola de reproducción secuencial (sin solapes) | V1.2.1–1.2.6 |
+| Contador de tiempo restante en la cola | V1.2.3 |
+| Orden visual de la cola = orden real de reproducción | V1.2.4 |
 | Parada de emergencia desde la cola | V1.2.6 |
 | QR Fijo (prioridad absoluta, salta la cola) | V1.2.8 |
-
+| Logo de cliente por evento (PNG transparente) | V1.2.10 |
+| Mostrar Logo Cliente en Overlay | V1.2.13 |
