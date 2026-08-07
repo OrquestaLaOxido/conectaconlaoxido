@@ -277,6 +277,8 @@ Automática — sale en pantalla en cuanto lo apruebas
 
 <p class="notaQR">Mensajes ya aprobados, esperando a que los saques en pantalla.</p>
 
+<div id="avisoColaAutomatica" class="avisoPalabra" style="display:none"></div>
+
 <div id="colaVisualizacion">
 <p class="vacio">Cargando...</p>
 </div>
@@ -593,6 +595,8 @@ function iniciarPanel(){
   escucharPendientes();
 
   escucharCola();
+
+  reproducirSiguienteEnEspera(); // por si quedó algo "en espera" atascado de antes
 
   cargarRedesSociales();
 
@@ -1195,6 +1199,17 @@ async function reproducirSiguienteEnEspera(){
 
   try{
 
+    // Por seguridad: si por lo que sea ya hay algo reproduciéndose
+    // (p.ej. esta función se llama dos veces casi a la vez), no
+    // lancemos un segundo elemento encima.
+    let ocupado = await refMensajes(dbOperador)
+      .where("estado","==","reproduciendo")
+      .limit(1)
+      .get();
+
+    if(!ocupado.empty) return;
+
+
     let snapshot = await refMensajes(dbOperador)
       .where("estado","==","en_espera")
       .orderBy("puestoEnEsperaEn","asc")
@@ -1211,6 +1226,16 @@ async function reproducirSiguienteEnEspera(){
   }catch(err){
 
     console.error("Error reproduciendo el siguiente en espera:", err);
+
+    let aviso = document.getElementById("avisoColaAutomatica");
+
+    if(aviso){
+
+      aviso.textContent = "⚠️ No se pudo pasar automáticamente al siguiente en espera (" + err.message + "). Si menciona un índice, revisa la consola (F12) y créalo desde el enlace que te dé.";
+
+      aviso.style.display = "block";
+
+    }
 
   }
 
