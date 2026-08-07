@@ -352,12 +352,17 @@ function mostrarRedSocial(d){
 
   let caja = document.createElement("div");
 
-  caja.className = "cartelRedSocial " + (esTiktok ? "redTiktok" : "redInstagram") + " entrada " + claseFondo() + " " + claseFuente();
+  caja.className = "cartelPopup " + (esTiktok ? "redTiktok" : "redInstagram") + " entrada " + claseFondo() + " " + claseFuente();
 
 
   caja.innerHTML = `
+  <div class="avatarAro">
   <div class="redSocialIcono">${esTiktok ? ICONO_TIKTOK : ICONO_INSTAGRAM}</div>
-  <div class="redSocialHandle">${escapeHTML(d.texto)}</div>
+  </div>
+  <div class="popupContenido">
+  <div class="nombreOverlay popupNombre">${esTiktok ? "TikTok" : "Instagram"}</div>
+  <div class="texto popupTexto">${escapeHTML(d.texto)}</div>
+  </div>
   `;
 
 
@@ -391,7 +396,7 @@ function mostrarSorteo(d){
 
   caja.innerHTML = `
   <div class="sorteoEtiqueta">🎁 SORTEO</div>
-  <div class="sorteoNombre" id="sorteoNombreActual">🎲</div>
+  <div class="sorteoNombre sorteoGirando" id="sorteoNombreActual">🎲</div>
   `;
 
 
@@ -409,6 +414,10 @@ function mostrarSorteo(d){
 
     elemento.textContent = ganador;
 
+    elemento.classList.remove("sorteoGirando");
+
+    lanzarConfeti();
+
     return;
 
   }
@@ -416,7 +425,7 @@ function mostrarSorteo(d){
 
   let vueltas = 0;
 
-  let totalVueltas = 22;
+  let totalVueltas = 26;
 
   let intervalo = 70;
 
@@ -432,7 +441,7 @@ function mostrarSorteo(d){
 
       vueltas++;
 
-      intervalo = intervalo * 1.12;
+      intervalo = intervalo * 1.13;
 
       setTimeout(siguiente, intervalo);
 
@@ -440,7 +449,11 @@ function mostrarSorteo(d){
 
       elemento.textContent = ganador;
 
+      elemento.classList.remove("sorteoGirando");
+
       caja.classList.add("sorteoGanador");
+
+      lanzarConfeti();
 
     }
 
@@ -451,6 +464,50 @@ function mostrarSorteo(d){
 
   // El sorteo se queda en pantalla hasta que el operador limpie
   // o muestre otra cosa — no desaparece solo.
+
+}
+
+
+
+
+/* Lluvia de confeti al revelar el ganador — igual que la lluvia de
+   emojis, pero SIN llamar a limpiar() primero, para no borrar la
+   tarjeta del sorteo que hay debajo. */
+
+function lanzarConfeti(){
+
+  let opciones = ["🎉","✨","🎊","⭐","🥳"];
+
+
+  for(let i=0; i<80; i++){
+
+    let emoji = document.createElement("div");
+
+    emoji.className = "emoji";
+
+    emoji.innerText = opciones[Math.floor(Math.random()*opciones.length)];
+
+    emoji.style.left = Math.random()*100 + "vw";
+
+    emoji.style.fontSize = (30 + Math.random()*50) + "px";
+
+    emoji.style.animationDuration = (2.5 + Math.random()*3) + "s";
+
+
+    escenario.appendChild(emoji);
+
+
+    setTimeout(()=>{
+
+      if(emoji.parentNode){
+
+        emoji.remove();
+
+      }
+
+    }, 6000);
+
+  }
 
 }
 

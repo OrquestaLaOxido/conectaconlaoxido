@@ -760,10 +760,6 @@ function añadirQRACola(){
 
     creado: firebase.firestore.FieldValue.serverTimestamp()
 
-  }).then(()=>{
-
-    alert("✅ Añadido a la cola de visualización. Muéstralo desde ahí cuando quieras.");
-
   }).catch(err=>{
 
     console.error(err);
@@ -1754,10 +1750,6 @@ function mostrarRedSocial(red){
 
     creado: firebase.firestore.FieldValue.serverTimestamp()
 
-  }).then(()=>{
-
-    alert("✅ Añadido a la cola de visualización.");
-
   }).catch(err=>{
 
     console.error(err);
@@ -1865,10 +1857,6 @@ function ejecutarSorteo(){
     estado: "en_cola",
 
     creado: firebase.firestore.FieldValue.serverTimestamp()
-
-  }).then(()=>{
-
-    alert("✅ Sorteo preparado y añadido a la cola. Ganador: " + ganador);
 
   }).catch(err=>{
 

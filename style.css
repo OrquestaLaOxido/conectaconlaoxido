@@ -3807,28 +3807,9 @@ input, textarea{
 
 /* ==================================
    REDES SOCIALES EN EL OVERLAY
+   (usan el mismo cartel PopUp que los mensajes — el icono
+   de la red hace de "avatar")
    ================================== */
-
-
-.cartelRedSocial{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:24px;
-
-    padding:30px 50px;
-
-    border-radius:28px;
-
-    background:var(--gris-oscuro);
-
-    border:2px solid var(--borde);
-
-    box-shadow:0 20px 50px rgba(0,0,0,.5);
-
-}
 
 
 .redSocialIcono{
@@ -3839,13 +3820,15 @@ input, textarea{
 
     justify-content:center;
 
-    width:110px;
+    width:96px;
 
-    height:110px;
+    height:96px;
 
     border-radius:50%;
 
-    flex-shrink:0;
+    border:4px solid var(--gris-oscuro);
+
+    box-shadow:0 10px 25px rgba(0,0,0,.4);
 
 }
 
@@ -3860,19 +3843,6 @@ input, textarea{
 .redTiktok .redSocialIcono{
 
     background:linear-gradient(135deg, #25f4ee, #000000, #fe2c55);
-
-}
-
-
-.redSocialHandle{
-
-    font-family:var(--fuente-display);
-
-    font-size:44px;
-
-    letter-spacing:1px;
-
-    color:var(--texto);
 
 }
 
@@ -3937,6 +3907,30 @@ input, textarea{
 }
 
 
+.sorteoGirando{
+
+    animation:girandoSorteo .12s ease-in-out infinite;
+
+}
+
+
+@keyframes girandoSorteo{
+
+    0%,100%{
+
+        transform:scale(1) rotate(0deg);
+
+    }
+
+    50%{
+
+        transform:scale(1.1) rotate(-1.5deg);
+
+    }
+
+}
+
+
 .sorteoGanador{
 
     animation:brilloGanador 1s ease infinite alternate;
@@ -3947,6 +3941,31 @@ input, textarea{
 .sorteoGanador .sorteoNombre{
 
     color:var(--ambar);
+
+    animation:reboteGanador .5s ease;
+
+}
+
+
+@keyframes reboteGanador{
+
+    0%{
+
+        transform:scale(.6);
+
+    }
+
+    60%{
+
+        transform:scale(1.25);
+
+    }
+
+    100%{
+
+        transform:scale(1);
+
+    }
 
 }
 
