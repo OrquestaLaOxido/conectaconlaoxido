@@ -4242,3 +4242,19 @@ input, textarea{
     transform:translateX(24px);
 
 }
+
+
+
+
+/* ==================================
+   SELECTOR DE ESTADO EN EL SIDEBAR DE control.html
+   ================================== */
+
+
+.selectorEstadoSidebar{
+
+    margin:0 auto 15px;
+
+    justify-content:center;
+
+}

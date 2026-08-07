@@ -203,6 +203,14 @@ Automática — sale en pantalla en cuanto lo apruebas
 
 <span id="insigniaEvento" class="insigniaEvento insigniaSidebar"></span>
 
+<div id="selectorEstadoControl" class="selectorEstado selectorEstadoSidebar" data-activo="true">
+<span class="selectorEstadoEtiqueta">Inactivo</span>
+<div class="selectorEstadoPista">
+<div class="selectorEstadoBola"></div>
+</div>
+<span class="selectorEstadoEtiqueta">Activo</span>
+</div>
+
 <button class="sidebarBtn sidebarSalir" onclick="cerrarSesion()">🚪 Cerrar sesión</button>
 
 <p class="sidebarCopy">© <span id="anioActual"></span> La Óxido</p>
@@ -603,6 +611,72 @@ function iniciarPanel(){
   cargarListaSorteo();
 
   escucharParticipantes();
+
+  iniciarSelectorEstadoControl();
+
+}
+
+
+
+
+/* Interruptor Activo/Inactivo del evento actual, en el sidebar.
+   Escucha en tiempo real, así que se mantiene sincronizado con lo
+   que se cambie desde dashboard.html (o al revés). */
+
+function iniciarSelectorEstadoControl(){
+
+  let el = document.getElementById("selectorEstadoControl");
+
+
+  refEvento(EVENTO_ID, dbOperador).onSnapshot(snap=>{
+
+    let activo = snap.exists ? snap.data().activo !== false : true;
+
+    aplicarEstadoVisualControl(el, activo);
+
+  }, err=>{
+
+    console.error("Error escuchando el estado del evento:", err);
+
+  });
+
+
+  el.addEventListener("click", ()=>{
+
+    let estabaActivo = el.dataset.activo === "true";
+
+    let nuevoActivo = !estabaActivo;
+
+
+    aplicarEstadoVisualControl(el, nuevoActivo);
+
+
+    refEvento(EVENTO_ID, dbOperador).update({activo: nuevoActivo}).catch(err=>{
+
+      console.error(err);
+
+      alert("No se pudo cambiar el estado del evento: " + err.message);
+
+      aplicarEstadoVisualControl(el, estabaActivo);
+
+    });
+
+  });
+
+}
+
+
+function aplicarEstadoVisualControl(el, activo){
+
+  el.dataset.activo = String(activo);
+
+  el.querySelector(".selectorEstadoPista").classList.toggle("activo", activo);
+
+  let etiquetas = el.querySelectorAll(".selectorEstadoEtiqueta");
+
+  etiquetas[0].classList.toggle("activa", !activo);
+
+  etiquetas[1].classList.toggle("activa", activo);
 
 }
 

@@ -265,6 +265,8 @@ document.getElementById("anioActual").textContent = new Date().getFullYear();
 
       document.getElementById("pCargandoEvento").style.display = "none";
 
+      document.getElementById("insigniaEventoPublico").textContent = "Evento: Sin Evento";
+
       document.getElementById("pSinEvento").style.display = "block";
 
       return;
@@ -286,6 +288,8 @@ document.getElementById("anioActual").textContent = new Date().getFullYear();
 
     }else{
 
+      document.getElementById("insigniaEventoPublico").textContent = "Evento: Sin Evento";
+
       document.getElementById("pSinEvento").style.display = "block";
 
     }
@@ -295,6 +299,8 @@ document.getElementById("anioActual").textContent = new Date().getFullYear();
     console.error("Error comprobando el evento:", err);
 
     document.getElementById("pCargandoEvento").style.display = "none";
+
+    document.getElementById("insigniaEventoPublico").textContent = "Evento: Sin Evento";
 
     document.getElementById("pSinEvento").style.display = "block";
 
