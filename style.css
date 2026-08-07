@@ -3582,6 +3582,13 @@ input, textarea{
 }
 
 
+.lluviaPublico{
+
+    grid-template-columns:repeat(3, 1fr);
+
+}
+
+
 .botonReaccionPublico{
 
     background:var(--gris-medio);
@@ -3611,11 +3618,63 @@ input, textarea{
 }
 
 
+.botonLluviaPublico{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:2px;
+
+    background:var(--gris-medio);
+
+    border:1px solid var(--borde);
+
+    border-radius:14px;
+
+    font-size:19px;
+
+    line-height:1;
+
+    padding:14px 4px;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    box-sizing:border-box;
+
+}
+
+
+.botonLluviaPublico:hover{
+
+    border-color:var(--naranja);
+
+}
+
+
+.botonLluviaPublico:disabled{
+
+    opacity:.4;
+
+}
+
+
 @media(max-width:380px){
 
 .reaccionesPublico{
 
     grid-template-columns:repeat(3, 1fr);
+
+}
+
+
+.botonLluviaPublico{
+
+    font-size:16px;
 
 }
 
@@ -3905,30 +3964,6 @@ input, textarea{
     min-width:300px;
 
     text-align:center;
-
-}
-
-
-.sorteoGirando{
-
-    animation:girandoSorteo .12s ease-in-out infinite;
-
-}
-
-
-@keyframes girandoSorteo{
-
-    0%,100%{
-
-        transform:scale(1) rotate(0deg);
-
-    }
-
-    50%{
-
-        transform:scale(1.1) rotate(-1.5deg);
-
-    }
 
 }
 

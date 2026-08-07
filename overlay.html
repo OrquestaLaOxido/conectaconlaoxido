@@ -396,7 +396,7 @@ function mostrarSorteo(d){
 
   caja.innerHTML = `
   <div class="sorteoEtiqueta">🎁 SORTEO</div>
-  <div class="sorteoNombre sorteoGirando" id="sorteoNombreActual">🎲</div>
+  <div class="sorteoNombre" id="sorteoNombreActual">🎲</div>
   `;
 
 
@@ -414,8 +414,6 @@ function mostrarSorteo(d){
 
     elemento.textContent = ganador;
 
-    elemento.classList.remove("sorteoGirando");
-
     lanzarConfeti();
 
     return;
@@ -425,9 +423,9 @@ function mostrarSorteo(d){
 
   let vueltas = 0;
 
-  let totalVueltas = 26;
+  let totalVueltas = 16;
 
-  let intervalo = 70;
+  let intervalo = 50;
 
 
   function siguiente(){
@@ -441,15 +439,13 @@ function mostrarSorteo(d){
 
       vueltas++;
 
-      intervalo = intervalo * 1.13;
+      intervalo = intervalo * 1.11;
 
       setTimeout(siguiente, intervalo);
 
     }else{
 
       elemento.textContent = ganador;
-
-      elemento.classList.remove("sorteoGirando");
 
       caja.classList.add("sorteoGanador");
 
