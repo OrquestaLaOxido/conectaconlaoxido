@@ -132,6 +132,15 @@ Automática — sale en pantalla en cuanto lo apruebas
 <input id="configDuracion" type="range" min="0" max="20" step="1" value="8" class="sliderTiempo" oninput="document.getElementById('configDuracionValor').textContent = this.value + 's'">
 
 
+<label class="etiquetaSlider" style="margin-top:20px">
+⏳ Tiempo de espera entre mensajes de una misma persona del público: <span id="configEsperaValor">15s</span>
+</label>
+
+<input id="configEspera" type="range" min="0" max="200" step="5" value="15" class="sliderTiempo" oninput="document.getElementById('configEsperaValor').textContent = this.value + 's'">
+
+<p class="notaQR">Solo afecta a los mensajes del público — tus mensajes/reacciones manuales no tienen que esperar.</p>
+
+
 <hr class="separadorModal">
 
 <label class="etiquetaQR">🎨 Colores de mensajes y fuentes</label>
@@ -346,7 +355,7 @@ Automática — sale en pantalla en cuanto lo apruebas
 ✅ Foto revisada, apta para mostrar
 </label>
 
-<button class="fotoBtn" onclick="mostrarFotoDirecta()" disabled>📸 MOSTRAR FOTO</button>
+<button id="botonMostrarFotoDirecta" class="fotoBtn" onclick="mostrarFotoDirecta()" disabled>📸 MOSTRAR FOTO</button>
 
 </div>
 
@@ -366,6 +375,62 @@ Marcar mensajes con posibles palabras prohibidas
 <textarea id="listaProhibidas" placeholder="palabra1, palabra2, palabra3"></textarea>
 
 <button class="fotoBtn" onclick="guardarPalabras()">💾 Guardar lista</button>
+
+</div>
+
+
+
+<div class="bloque">
+
+<h2>📱 Redes sociales</h2>
+
+<label class="etiquetaQR">Instagram</label>
+
+<input id="instagramHandleControl" placeholder="@usuario_instagram">
+
+<button class="mostrar botonAncho botonConEspacio" onclick="mostrarRedSocial('instagram')">📸 Mostrar Instagram en Overlay</button>
+
+<label class="etiquetaQR" style="margin-top:15px">TikTok</label>
+
+<input id="tiktokHandleControl" placeholder="@usuario_tiktok">
+
+<button class="mostrar botonAncho" onclick="mostrarRedSocial('tiktok')">🎵 Mostrar TikTok en Overlay</button>
+
+<p class="notaQR">Cada una se añade a la cola de visualización por separado.</p>
+
+</div>
+
+
+
+<div class="bloque">
+
+<h2>🎁 Sorteo</h2>
+
+<label class="etiquetaQR">Nombres de Instagram (uno por línea)</label>
+
+<textarea id="sorteoLista" placeholder="@usuario1
+@usuario2
+@usuario3"></textarea>
+
+<button class="fotoBtn botonAncho botonConEspacio" onclick="guardarListaSorteo()">💾 Guardar lista</button>
+
+<button class="mostrar botonAncho" onclick="ejecutarSorteo()">🎲 Ejecutar Sorteo</button>
+
+<p class="notaQR">Se prepara el ganador y se añade a la cola — la ruleta se anima en el overlay al mostrarlo.</p>
+
+</div>
+
+
+
+<div class="bloque bloqueAncho">
+
+<h2>👥 Participantes del público</h2>
+
+<p class="notaQR">Todas las personas que han escrito al menos un mensaje en este evento.</p>
+
+<div id="listaParticipantes">
+<p class="vacio">Cargando...</p>
+</div>
 
 </div>
 
@@ -528,6 +593,12 @@ function iniciarPanel(){
   escucharPendientes();
 
   escucharCola();
+
+  cargarRedesSociales();
+
+  cargarListaSorteo();
+
+  escucharParticipantes();
 
 }
 
@@ -792,19 +863,37 @@ function renderPendientes(docs){
     card.className = "itemPendiente" + (palabra ? " alerta" : "");
 
 
-    card.innerHTML = `
-    ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
-    <div class="contenidoPendiente">
-    <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
-    <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
-    ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
-    ${palabra ? `<div class="avisoPalabra">⚠️ posible palabra: "${escapeHTML(palabra)}"</div>` : ""}
-    </div>
-    <div class="accionesPendiente">
-    <button class="mostrar" data-id="${doc.id}" data-accion="aprobar">✅ Aprobar (a la cola)</button>
-    <button class="limpiar" data-id="${doc.id}" data-accion="rechazar">❌ Rechazar</button>
-    </div>
-    `;
+    if(d.tipo === "emoji_lluvia"){
+
+      card.innerHTML = `
+      ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
+      <div class="textoPendiente">🌧️ Pide una lluvia de ${escapeHTML(d.texto||"")}</div>
+      </div>
+      <div class="accionesPendiente">
+      <button class="mostrar" data-id="${doc.id}" data-accion="aprobar">✅ Aprobar (a la cola)</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="rechazar">❌ Rechazar</button>
+      </div>
+      `;
+
+    }else{
+
+      card.innerHTML = `
+      ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
+      <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
+      ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
+      ${palabra ? `<div class="avisoPalabra">⚠️ posible palabra: "${escapeHTML(palabra)}"</div>` : ""}
+      </div>
+      <div class="accionesPendiente">
+      <button class="mostrar" data-id="${doc.id}" data-accion="aprobar">✅ Aprobar (a la cola)</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="rechazar">❌ Rechazar</button>
+      </div>
+      `;
+
+    }
 
 
     cont.appendChild(card);
@@ -884,30 +973,76 @@ function publicarMensajeDesdeId(id){
 
     let d = snap.data();
 
+    let paquete;
 
-    let paquete = d.tipo === "qr" ? {
 
-      tipo: "qr",
+    if(d.tipo === "qr"){
 
-      imagen: d.imagen || null,
+      paquete = {
 
-      tiempo: obtenerTiempo()
+        tipo: "qr",
 
-    } : {
+        imagen: d.imagen || null,
 
-      tipo: "mensaje",
+        tiempo: obtenerTiempo()
 
-      nombre: d.nombre || "",
+      };
 
-      avatar: d.avatar || null,
+    }else if(d.tipo === "emoji_lluvia"){
 
-      texto: d.texto || "",
+      paquete = {
 
-      imagen: d.imagen || null,
+        tipo: "emoji_lluvia",
 
-      tiempo: obtenerTiempo()
+        emoji: d.texto || "❤️"
 
-    };
+      };
+
+    }else if(d.tipo === "red_social"){
+
+      paquete = {
+
+        tipo: "red_social",
+
+        red: d.red || "instagram",
+
+        texto: d.texto || "",
+
+        tiempo: obtenerTiempo()
+
+      };
+
+    }else if(d.tipo === "sorteo"){
+
+      paquete = {
+
+        tipo: "sorteo",
+
+        nombres: d.nombres || [],
+
+        ganador: d.ganador || ""
+
+      };
+
+    }else{
+
+      paquete = {
+
+        tipo: "mensaje",
+
+        nombre: d.nombre || "",
+
+        avatar: d.avatar || null,
+
+        texto: d.texto || "",
+
+        imagen: d.imagen || null,
+
+        tiempo: obtenerTiempo()
+
+      };
+
+    }
 
 
     return publicarEnVivo(paquete).then(()=>{
@@ -990,6 +1125,46 @@ function renderCola(docs){
       <div class="contenidoPendiente">
       <div class="nombrePendiente">📺 Código QR del evento</div>
       ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
+      </div>
+      <div class="accionesPendiente">
+      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
+      </div>
+      `;
+
+    }else if(d.tipo === "emoji_lluvia"){
+
+      card.innerHTML = `
+      ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
+      <div class="textoPendiente">🌧️ Lluvia de ${escapeHTML(d.texto||"")}</div>
+      </div>
+      <div class="accionesPendiente">
+      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
+      </div>
+      `;
+
+    }else if(d.tipo === "red_social"){
+
+      card.innerHTML = `
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">${d.red === "tiktok" ? "🎵 TikTok" : "📸 Instagram"} del evento</div>
+      <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
+      </div>
+      <div class="accionesPendiente">
+      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
+      </div>
+      `;
+
+    }else if(d.tipo === "sorteo"){
+
+      card.innerHTML = `
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">🎁 Sorteo (${(d.nombres||[]).length} participantes)</div>
+      <div class="textoPendiente">Ganador preparado: ${escapeHTML(d.ganador||"")}</div>
       </div>
       <div class="accionesPendiente">
       <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
@@ -1177,6 +1352,10 @@ function abrirModalConfiguracion(){
 
   document.getElementById("configFuenteMensaje").value = "display";
 
+  document.getElementById("configEspera").value = 15;
+
+  document.getElementById("configEsperaValor").textContent = "15s";
+
 
   refEstilo(EVENTO_ID, dbOperador).get().then(snap=>{
 
@@ -1189,6 +1368,13 @@ function abrirModalConfiguracion(){
       document.getElementById("configFondoMensaje").value = d.fondo || "negro";
 
       document.getElementById("configFuenteMensaje").value = d.fuente || "display";
+
+
+      let espera = typeof d.esperaSegundos === "number" ? d.esperaSegundos : 15;
+
+      document.getElementById("configEspera").value = espera;
+
+      document.getElementById("configEsperaValor").textContent = espera + "s";
 
     }
 
@@ -1236,6 +1422,8 @@ function guardarConfiguracion(){
     fondo: document.getElementById("configFondoMensaje").value,
 
     fuente: document.getElementById("configFuenteMensaje").value,
+
+    esperaSegundos: Number(document.getElementById("configEspera").value),
 
     actualizado: firebase.firestore.FieldValue.serverTimestamp()
 
@@ -1414,7 +1602,7 @@ const archivoFoto = document.getElementById("archivoFoto");
 
 const fotoApta = document.getElementById("fotoApta");
 
-const botonFoto = document.querySelector(".fotoBtn");
+const botonFoto = document.getElementById("botonMostrarFotoDirecta");
 
 
 zonaFoto.onclick = () => archivoFoto.click();
@@ -1477,6 +1665,348 @@ function mostrarFotoDirecta(){
   fotoApta.checked = false;
 
   botonFoto.disabled = true;
+
+}
+
+
+
+
+/* ==================================
+   REDES SOCIALES (Instagram / TikTok por separado)
+   ================================== */
+
+
+function cargarRedesSociales(){
+
+  refEvento(EVENTO_ID, dbOperador).get().then(snap=>{
+
+    let d = snap.exists ? snap.data() : {};
+
+    document.getElementById("instagramHandleControl").value = d.instagramHandle || "";
+
+    document.getElementById("tiktokHandleControl").value = d.tiktokHandle || "";
+
+  }).catch(err=>{
+
+    console.error("Error cargando redes sociales:", err);
+
+  });
+
+}
+
+
+function guardarRedesSociales(){
+
+  refEvento(EVENTO_ID, dbOperador).set({
+
+    instagramHandle: document.getElementById("instagramHandleControl").value.trim(),
+
+    tiktokHandle: document.getElementById("tiktokHandleControl").value.trim()
+
+  }, {merge:true}).catch(err=>{
+
+    console.error("Error guardando redes sociales:", err);
+
+  });
+
+}
+
+
+document.getElementById("instagramHandleControl").addEventListener("change", guardarRedesSociales);
+
+document.getElementById("tiktokHandleControl").addEventListener("change", guardarRedesSociales);
+
+
+function mostrarRedSocial(red){
+
+  let inputId = red === "instagram" ? "instagramHandleControl" : "tiktokHandleControl";
+
+  let handle = document.getElementById(inputId).value.trim();
+
+
+  if(!handle){
+
+    alert("Escribe primero el usuario de " + (red === "instagram" ? "Instagram" : "TikTok") + ".");
+
+    return;
+
+  }
+
+
+  let handleFormateado = handle.startsWith("@") ? handle : "@" + handle;
+
+
+  refMensajes(dbOperador).add({
+
+    tipo: "red_social",
+
+    red: red,
+
+    texto: handleFormateado,
+
+    nombre: null,
+
+    avatar: null,
+
+    imagen: null,
+
+    estado: "en_cola",
+
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+
+  }).then(()=>{
+
+    alert("✅ Añadido a la cola de visualización.");
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo añadir a la cola: " + err.message);
+
+  });
+
+}
+
+
+
+
+/* ==================================
+   SORTEO
+   ================================== */
+
+
+function cargarListaSorteo(){
+
+  refEvento(EVENTO_ID, dbOperador).get().then(snap=>{
+
+    let d = snap.exists ? snap.data() : {};
+
+    document.getElementById("sorteoLista").value = (d.sorteoNombres || []).join("\n");
+
+  }).catch(err=>{
+
+    console.error("Error cargando la lista del sorteo:", err);
+
+  });
+
+}
+
+
+function obtenerNombresSorteo(){
+
+  return document.getElementById("sorteoLista").value
+
+    .split("\n")
+
+    .map(n => n.trim())
+
+    .filter(Boolean);
+
+}
+
+
+function guardarListaSorteo(){
+
+  let nombres = obtenerNombresSorteo();
+
+  refEvento(EVENTO_ID, dbOperador).set({
+
+    sorteoNombres: nombres
+
+  }, {merge:true}).then(()=>{
+
+    alert("✅ Lista guardada (" + nombres.length + " participantes).");
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo guardar la lista: " + err.message);
+
+  });
+
+}
+
+
+function ejecutarSorteo(){
+
+  let nombres = obtenerNombresSorteo();
+
+
+  if(nombres.length < 2){
+
+    alert("Añade al menos 2 nombres para poder sortear.");
+
+    return;
+
+  }
+
+
+  let ganador = nombres[Math.floor(Math.random() * nombres.length)];
+
+
+  refMensajes(dbOperador).add({
+
+    tipo: "sorteo",
+
+    nombres: nombres,
+
+    ganador: ganador,
+
+    nombre: null,
+
+    avatar: null,
+
+    texto: null,
+
+    imagen: null,
+
+    estado: "en_cola",
+
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+
+  }).then(()=>{
+
+    alert("✅ Sorteo preparado y añadido a la cola. Ganador: " + ganador);
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo preparar el sorteo: " + err.message);
+
+  });
+
+}
+
+
+
+
+/* ==================================
+   PARTICIPANTES (silenciar / banear)
+   ================================== */
+
+
+function escucharParticipantes(){
+
+  refParticipantes(dbOperador).onSnapshot(snapshot=>{
+
+    renderParticipantes(snapshot.docs);
+
+  }, err=>{
+
+    console.error("Error escuchando participantes:", err);
+
+    document.getElementById("listaParticipantes").innerHTML =
+      '<p class="avisoPalabra">⚠️ No se pudo cargar la lista de participantes (' + err.message + ').</p>';
+
+  });
+
+}
+
+
+function renderParticipantes(docs){
+
+  let cont = document.getElementById("listaParticipantes");
+
+
+  if(docs.length === 0){
+
+    cont.innerHTML = '<p class="vacio">Todavía no ha escrito nadie.</p>';
+
+    return;
+
+  }
+
+
+  cont.innerHTML = "";
+
+
+  docs.forEach(doc=>{
+
+    let d = doc.data();
+
+    let estado = d.estado || "activo";
+
+
+    let etiquetaEstado = estado === "baneado" ? "⛔ Baneado" :
+                          estado === "silenciado" ? "🔇 Silenciado" : "Activo";
+
+
+    let botones = "";
+
+    if(estado === "baneado"){
+
+      botones = `<button class="mostrar" data-uid="${doc.id}" data-accion="reactivar">✅ Reactivar</button>`;
+
+    }else if(estado === "silenciado"){
+
+      botones = `
+      <button class="mostrar" data-uid="${doc.id}" data-accion="reactivar">✅ Reactivar</button>
+      <button class="limpiar" data-uid="${doc.id}" data-accion="banear">⛔ Banear</button>
+      `;
+
+    }else{
+
+      botones = `
+      <button class="fotoBtn" data-uid="${doc.id}" data-accion="silenciar">🔇 Silenciar</button>
+      <button class="limpiar" data-uid="${doc.id}" data-accion="banear">⛔ Banear</button>
+      `;
+
+    }
+
+
+    let fila = document.createElement("div");
+
+    fila.className = "itemPendiente" + (estado !== "activo" ? " alerta" : "");
+
+
+    fila.innerHTML = `
+    ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+    <div class="contenidoPendiente">
+    <div class="nombrePendiente">${escapeHTML(d.nombre || "")}</div>
+    <div class="textoPendiente">${etiquetaEstado}</div>
+    </div>
+    <div class="accionesPendiente">${botones}</div>
+    `;
+
+
+    cont.appendChild(fila);
+
+  });
+
+
+  cont.querySelectorAll("button").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      manejarAccionParticipante(btn.dataset.uid, btn.dataset.accion);
+
+    });
+
+  });
+
+}
+
+
+function manejarAccionParticipante(uid, accion){
+
+  let nuevoEstado = accion === "silenciar" ? "silenciado" :
+                     accion === "banear" ? "baneado" : "activo";
+
+
+  refParticipante(uid, dbOperador).set({
+
+    estado: nuevoEstado
+
+  }, {merge:true}).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo actualizar: " + err.message);
+
+  });
 
 }
 

@@ -152,3 +152,20 @@ function refEstilo(eventoId, baseDeDatos){
   return (baseDeDatos || db).collection("eventos").doc(eventoId || EVENTO_ID).collection("en_vivo").doc("estilo");
 
 }
+
+
+/* Participantes del público que han escrito al menos un mensaje en
+   este evento — para la lista de silenciar/banear en control.html. */
+
+function refParticipantes(baseDeDatos, eventoId){
+
+  return (baseDeDatos || db).collection("eventos").doc(eventoId || EVENTO_ID).collection("participantes");
+
+}
+
+
+function refParticipante(uid, baseDeDatos, eventoId){
+
+  return refParticipantes(baseDeDatos, eventoId).doc(uid);
+
+}

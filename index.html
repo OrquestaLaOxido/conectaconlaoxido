@@ -28,7 +28,19 @@ Acceso moderación
 
 <div class="contenedorPublico">
 
-<div class="tarjetaPublico">
+
+<div id="pSinEvento" class="tarjetaPublico" style="display:none">
+
+<img src="logo.png" class="logoPublico">
+
+<h1>📅 Sin evento activo</h1>
+
+<p class="subtitulo">Hoy no hay ningún evento en directo por aquí. ¡Vuelve a intentarlo cuando empiece el show!</p>
+
+</div>
+
+
+<div id="pContenidoActivo" class="tarjetaPublico">
 
 <img src="logo.png" class="logoPublico">
 
@@ -47,6 +59,15 @@ Continuar con Google
 </button>
 
 <p class="notaGoogle">Necesitamos que inicies sesión con Google para poder enviar tu mensaje (así evitamos el spam). No hace falta registrarse, es tu cuenta de Google de siempre. <strong>Si tu mensaje se aprueba, tu nombre y foto de perfil de Google se proyectarán en pantalla junto a él.</strong></p>
+
+</div>
+
+
+<!-- ========= BLOQUEADO (silenciado o baneado) ========= -->
+
+<div id="pBloqueado" class="bloqueadoPublico" style="display:none">
+
+⛔ No puedes enviar mensajes en este evento.
 
 </div>
 
@@ -100,6 +121,18 @@ Continuar con Google
 <button type="button" class="botonReaccionPublico" data-emoji="😍">😍</button>
 </div>
 
+
+<div class="separadorReacciones">o una lluvia de emojis</div>
+
+<div class="reaccionesPublico">
+<button type="button" class="botonLluviaPublico" data-emoji="❤️">🌧️❤️</button>
+<button type="button" class="botonLluviaPublico" data-emoji="🔥">🌧️🔥</button>
+<button type="button" class="botonLluviaPublico" data-emoji="👏">🌧️👏</button>
+<button type="button" class="botonLluviaPublico" data-emoji="🎉">🌧️🎉</button>
+<button type="button" class="botonLluviaPublico" data-emoji="⭐">🌧️⭐</button>
+<button type="button" class="botonLluviaPublico" data-emoji="😍">🌧️😍</button>
+</div>
+
 </div>
 
 
@@ -110,6 +143,7 @@ Continuar con Google
 </div>
 
 </div>
+
 
 </div>
 
@@ -176,27 +210,134 @@ document.getElementById("anioActual").textContent = new Date().getFullYear();
 
 
 /* ==================================
+   ¿HAY EVENTO ACTIVO HOY?
+   ================================== */
+
+
+(async function comprobarEventoActivo(){
+
+  try{
+
+    let snap = await refEvento(EVENTO_ID).get();
+
+    let activo = snap.exists && snap.data().activo !== false;
+
+    if(!activo){
+
+      document.getElementById("pContenidoActivo").style.display = "none";
+
+      document.getElementById("pSinEvento").style.display = "block";
+
+    }
+
+  }catch(err){
+
+    console.error("Error comprobando el evento:", err);
+
+  }
+
+})();
+
+
+
+
+/* ==================================
+   TIEMPO DE ESPERA ENTRE MENSAJES
+   (lo configura el operador, se guarda en Firestore para que
+   llegue hasta el móvil del público)
+   ================================== */
+
+
+let ESPERA_MS = 15000; // valor por defecto mientras carga el real
+
+
+refEstilo().get().then(snap=>{
+
+  if(snap.exists && typeof snap.data().esperaSegundos === "number"){
+
+    ESPERA_MS = snap.data().esperaSegundos * 1000;
+
+  }
+
+}).catch(err=>{
+
+  console.error("Error cargando el tiempo de espera:", err);
+
+});
+
+
+
+/* ==================================
    LOGIN CON GOOGLE (obligatorio para poder enviar)
    ================================== */
 
 
-auth.onAuthStateChanged(usuario=>{
+auth.onAuthStateChanged(async usuario=>{
 
   if(usuario){
 
     document.getElementById("pPasoLogin").style.display = "none";
 
-    document.getElementById("pPasoFormulario").style.display = "block";
 
-    document.getElementById("pGoogleFoto").src = usuario.photoURL || "";
+    // Registramos/actualizamos su ficha de participante (sin tocar
+    // nunca el campo "estado" — eso es cosa del operador).
+    refParticipante(usuario.uid).set({
 
-    document.getElementById("pGoogleNombre").textContent = usuario.displayName || "Sin nombre";
+      nombre: usuario.displayName || "Sin nombre",
+
+      avatar: usuario.photoURL || null,
+
+      uid: usuario.uid,
+
+      ultimoLogin: firebase.firestore.FieldValue.serverTimestamp()
+
+    }, {merge:true}).catch(err=>{
+
+      console.error("Error registrando participante:", err);
+
+    });
+
+
+    let bloqueado = false;
+
+    try{
+
+      let snap = await refParticipante(usuario.uid).get();
+
+      bloqueado = snap.exists && ["silenciado","baneado"].includes(snap.data().estado);
+
+    }catch(err){
+
+      console.error("Error comprobando si está bloqueado:", err);
+
+    }
+
+
+    if(bloqueado){
+
+      document.getElementById("pPasoFormulario").style.display = "none";
+
+      document.getElementById("pBloqueado").style.display = "block";
+
+    }else{
+
+      document.getElementById("pBloqueado").style.display = "none";
+
+      document.getElementById("pPasoFormulario").style.display = "block";
+
+      document.getElementById("pGoogleFoto").src = usuario.photoURL || "";
+
+      document.getElementById("pGoogleNombre").textContent = usuario.displayName || "Sin nombre";
+
+    }
 
   }else{
 
     document.getElementById("pPasoLogin").style.display = "block";
 
     document.getElementById("pPasoFormulario").style.display = "none";
+
+    document.getElementById("pBloqueado").style.display = "none";
 
   }
 
@@ -277,11 +418,9 @@ document.getElementById("pArchivoFoto").onchange = async (e) => {
 
 const CLAVE_ULTIMO_ENVIO = "oxido_ultimo_envio_" + EVENTO_ID;
 
-const ESPERA_MS = 15000;
 
 
-
-async function enviarMensajePublico(texto, imagen, boton, textoOriginalBoton){
+async function enviarMensajePublico(texto, imagen, boton, textoOriginalBoton, tipo){
 
   let usuario = auth.currentUser;
 
@@ -332,6 +471,8 @@ async function enviarMensajePublico(texto, imagen, boton, textoOriginalBoton){
 
     await refMensajes().add({
 
+      uid: usuario.uid,
+
       nombre: usuario.displayName || "Sin nombre",
 
       avatar: usuario.photoURL || null,
@@ -340,11 +481,20 @@ async function enviarMensajePublico(texto, imagen, boton, textoOriginalBoton){
 
       imagen: imagen,
 
+      tipo: tipo || "mensaje",
+
       estado: "pendiente",
 
       creado: firebase.firestore.FieldValue.serverTimestamp()
 
     });
+
+
+    refParticipante(usuario.uid).set({
+
+      ultimoMensaje: firebase.firestore.FieldValue.serverTimestamp()
+
+    }, {merge:true}).catch(()=>{});
 
 
     localStorage.setItem(CLAVE_ULTIMO_ENVIO, String(Date.now()));
@@ -418,6 +568,27 @@ document.querySelectorAll(".botonReaccionPublico").forEach(btn=>{
     if(!ok){
 
       document.querySelectorAll(".botonReaccionPublico").forEach(b => b.disabled = false);
+
+    }
+
+  });
+
+});
+
+
+
+
+document.querySelectorAll(".botonLluviaPublico").forEach(btn=>{
+
+  btn.addEventListener("click", async () => {
+
+    document.querySelectorAll(".botonLluviaPublico").forEach(b => b.disabled = true);
+
+    let ok = await enviarMensajePublico(btn.dataset.emoji, null, null, "", "emoji_lluvia");
+
+    if(!ok){
+
+      document.querySelectorAll(".botonLluviaPublico").forEach(b => b.disabled = false);
 
     }
 

@@ -109,6 +109,15 @@ Automática — sale en pantalla en cuanto se aprueba
 <input id="configDuracion" type="range" min="0" max="20" step="1" value="8" class="sliderTiempo" oninput="document.getElementById('configDuracionValor').textContent = this.value + 's'">
 
 
+<label class="etiquetaSlider" style="margin-top:20px">
+⏳ Tiempo de espera entre mensajes de una misma persona del público: <span id="configEsperaValor">15s</span>
+</label>
+
+<input id="configEspera" type="range" min="0" max="200" step="5" value="15" class="sliderTiempo" oninput="document.getElementById('configEsperaValor').textContent = this.value + 's'">
+
+<p class="notaQR">Solo afecta a los mensajes del público — tus mensajes/reacciones manuales no tienen que esperar.</p>
+
+
 <hr class="separadorModal">
 
 <label class="etiquetaQR">🎨 Colores de mensajes y fuentes</label>
@@ -511,6 +520,10 @@ function abrirModalConfiguracion(){
 
   document.getElementById("configFuenteMensaje").value = "display";
 
+  document.getElementById("configEspera").value = 15;
+
+  document.getElementById("configEsperaValor").textContent = "15s";
+
 
   if(todosLosEventos.length > 0){
 
@@ -525,6 +538,13 @@ function abrirModalConfiguracion(){
         document.getElementById("configFondoMensaje").value = d.fondo || "negro";
 
         document.getElementById("configFuenteMensaje").value = d.fuente || "display";
+
+
+        let espera = typeof d.esperaSegundos === "number" ? d.esperaSegundos : 15;
+
+        document.getElementById("configEspera").value = espera;
+
+        document.getElementById("configEsperaValor").textContent = espera + "s";
 
       }
 
@@ -585,6 +605,8 @@ function guardarConfiguracion(){
     fondo: document.getElementById("configFondoMensaje").value,
 
     fuente: document.getElementById("configFuenteMensaje").value,
+
+    esperaSegundos: Number(document.getElementById("configEspera").value),
 
     actualizado: firebase.firestore.FieldValue.serverTimestamp()
 
@@ -670,6 +692,7 @@ function renderEventos(docs){
     <div class="tarjetaEventoInfo">
     <h3>${escapeHTML(d.titulo || doc.id)}</h3>
     <p>${escapeHTML(d.fecha || "")}</p>
+    <span class="badgeEstadoEvento ${d.activo === false ? "badgeInactivo" : "badgeActivo"}">${d.activo === false ? "⛔ Inactivo" : "✅ Activo"}</span>
     </div>
     <div class="tarjetaEventoAcciones">
     <button class="mostrar" data-id="${doc.id}" data-accion="moderar">🎛️ Moderar</button>
@@ -677,6 +700,7 @@ function renderEventos(docs){
     <button class="botonEditar" data-id="${doc.id}" data-accion="editar">✏️ Editar</button>
     <button class="limpiar" data-id="${doc.id}" data-titulo="${escapeHTML(d.titulo || doc.id)}" data-accion="eliminar">🗑️ Eliminar</button>
     </div>
+    <button class="botonToggleActivo botonAncho" data-id="${doc.id}" data-activo="${d.activo !== false}" data-accion="toggleActivo">${d.activo === false ? "✅ Activar evento" : "⛔ Desactivar evento"}</button>
     `;
 
 
@@ -713,6 +737,21 @@ function renderEventos(docs){
       if(btn.dataset.accion==="eliminar"){
 
         confirmarEliminarEvento(btn.dataset.id, btn.dataset.titulo);
+
+      }
+
+
+      if(btn.dataset.accion==="toggleActivo"){
+
+        let estaActivo = btn.dataset.activo === "true";
+
+        refEvento(btn.dataset.id, dbOperador).update({activo: !estaActivo}).catch(err=>{
+
+          console.error(err);
+
+          alert("No se pudo cambiar el estado del evento: " + err.message);
+
+        });
 
       }
 
@@ -810,7 +849,9 @@ async function crearEvento(){
 
       creado: firebase.firestore.FieldValue.serverTimestamp(),
 
-      creadoPor: authOperador.currentUser.uid
+      creadoPor: authOperador.currentUser.uid,
+
+      activo: true
 
     });
 
@@ -1147,6 +1188,7 @@ function mostrarEventosDelDia(eventosDia){
     <div class="tarjetaEventoInfo">
     <h3>${escapeHTML(ev.titulo || ev.id)}</h3>
     <p>${escapeHTML(ev.fecha || "")}</p>
+    <span class="badgeEstadoEvento ${ev.activo === false ? "badgeInactivo" : "badgeActivo"}">${ev.activo === false ? "⛔ Inactivo" : "✅ Activo"}</span>
     </div>
     <div class="tarjetaEventoAcciones">
     <button class="mostrar" data-id="${ev.id}" data-accion="moderar">🎛️ Moderar</button>
@@ -1154,6 +1196,7 @@ function mostrarEventosDelDia(eventosDia){
     <button class="botonEditar" data-id="${ev.id}" data-accion="editar">✏️ Editar</button>
     <button class="limpiar" data-id="${ev.id}" data-titulo="${escapeHTML(ev.titulo || ev.id)}" data-accion="eliminar">🗑️ Eliminar</button>
     </div>
+    <button class="botonToggleActivo botonAncho" data-id="${ev.id}" data-activo="${ev.activo !== false}" data-accion="toggleActivo">${ev.activo === false ? "✅ Activar evento" : "⛔ Desactivar evento"}</button>
     `;
 
 
@@ -1196,6 +1239,21 @@ function mostrarEventosDelDia(eventosDia){
         cerrarModalDia();
 
         confirmarEliminarEvento(btn.dataset.id, btn.dataset.titulo);
+
+      }
+
+
+      if(btn.dataset.accion==="toggleActivo"){
+
+        let estaActivo = btn.dataset.activo === "true";
+
+        refEvento(btn.dataset.id, dbOperador).update({activo: !estaActivo}).catch(err=>{
+
+          console.error(err);
+
+          alert("No se pudo cambiar el estado del evento: " + err.message);
+
+        });
 
       }
 

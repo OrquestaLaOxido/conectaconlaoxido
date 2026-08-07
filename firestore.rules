@@ -15,57 +15,112 @@ service cloud.firestore {
 
     match /eventos/{eventoId} {
 
-      // Cualquiera puede leer el título/fecha del evento (no es sensible;
-      // el overlay y la página pública no lo necesitan hoy, pero no molesta).
+      // Cualquiera puede leer el evento (título/fecha/activo...) —
+      // index.html lo necesita para saber si hay evento hoy.
       allow read: if true;
 
-      // Solo el operador puede crear, editar o borrar eventos
-      // (esto es lo que usa dashboard.html).
+      // Solo el operador puede crear, editar, activar/desactivar o
+      // borrar eventos (esto es lo que usa dashboard.html).
       allow create, update, delete: if esOperador();
-    }
 
 
-    match /eventos/{eventoId}/mensajes/{mensajeId} {
-
-      // El nombre y la foto que se guardan tienen que ser EXACTAMENTE
-      // los de la cuenta de Google con la que se ha iniciado sesión
-      // (vienen en el propio token, no los puede inventar el cliente).
-      // Así es imposible mandar un mensaje con un nombre o foto falsos.
-      function nombreValido(){
-        return request.resource.data.nombre == request.auth.token.name ||
-               (!('name' in request.auth.token) && request.resource.data.nombre == "Sin nombre");
+      /* ¿Está el evento activo? Si el campo "activo" no existe
+         (eventos creados antes de esta función), se trata como
+         activo por compatibilidad. */
+      function eventoActivo(){
+        return exists(/databases/$(database)/documents/eventos/$(eventoId))
+               && (
+                    !('activo' in get(/databases/$(database)/documents/eventos/$(eventoId)).data)
+                    || get(/databases/$(database)/documents/eventos/$(eventoId)).data.activo == true
+                  );
       }
 
-      function avatarValido(){
-        return request.resource.data.avatar == request.auth.token.picture ||
-               (!('picture' in request.auth.token) && request.resource.data.avatar == null);
+
+      /* ¿Esa persona (por su uid) está silenciada o baneada en
+         este evento? */
+      function estaBloqueado(uid){
+        let ref = /databases/$(database)/documents/eventos/$(eventoId)/participantes/$(uid);
+        return exists(ref) &&
+               get(ref).data.estado in ['silenciado', 'baneado'];
       }
 
-      // El público (logueado con Google) puede CREAR mensajes,
-      // pero solo con estado "pendiente" y campos limitados.
-      // El operador puede crear lo que necesite directamente
-      // (por ejemplo, el QR que añade a la cola de visualización).
-      allow create: if (request.auth != null
-                    && request.resource.data.estado == 'pendiente'
-                    && request.resource.data.texto is string
-                    && request.resource.data.texto.size() < 300
-                    && nombreValido()
-                    && avatarValido())
-                    || esOperador();
 
-      // Solo el operador puede leer la bandeja, aprobar,
-      // rechazar o borrar mensajes. El público NUNCA puede leer
-      // los mensajes de los demás ni tocar su estado.
-      allow read, update, delete: if esOperador();
-    }
+      match /mensajes/{mensajeId} {
 
-    match /eventos/{eventoId}/en_vivo/{docId} {
+        // El nombre y la foto que se guardan tienen que ser EXACTAMENTE
+        // los de la cuenta de Google con la que se ha iniciado sesión
+        // (vienen en el propio token, no los puede inventar el cliente).
+        // Así es imposible mandar un mensaje con un nombre o foto falsos.
+        function nombreValido(){
+          return request.resource.data.nombre == request.auth.token.name ||
+                 (!('name' in request.auth.token) && request.resource.data.nombre == "Sin nombre");
+        }
 
-      // El overlay (sin sesión) necesita LEER lo que está en pantalla.
-      allow read: if true;
+        function avatarValido(){
+          return request.resource.data.avatar == request.auth.token.picture ||
+                 (!('picture' in request.auth.token) && request.resource.data.avatar == null);
+        }
 
-      // Solo el operador puede publicar contenido en el overlay.
-      allow write: if esOperador();
+        // El público (logueado con Google) puede CREAR mensajes,
+        // pero solo si: el evento está activo, esa persona no está
+        // silenciada/baneada, va con estado "pendiente", el uid es
+        // el suyo real, y el nombre/foto coinciden con su cuenta.
+        // El operador puede crear lo que necesite directamente
+        // (QR, redes sociales, sorteo... van a la cola sin pasar
+        // por moderación, porque los publica él mismo).
+        allow create: if (request.auth != null
+                      && eventoActivo()
+                      && !estaBloqueado(request.auth.uid)
+                      && request.resource.data.estado == 'pendiente'
+                      && request.resource.data.uid == request.auth.uid
+                      && request.resource.data.texto is string
+                      && request.resource.data.texto.size() < 300
+                      && nombreValido()
+                      && avatarValido())
+                      || esOperador();
+
+        // Solo el operador puede leer la bandeja, aprobar,
+        // rechazar o borrar mensajes. El público NUNCA puede leer
+        // los mensajes de los demás ni tocar su estado.
+        allow read, update, delete: if esOperador();
+      }
+
+
+      match /en_vivo/{docId} {
+
+        // El overlay (sin sesión) necesita LEER lo que está en pantalla.
+        allow read: if true;
+
+        // Solo el operador puede publicar contenido en el overlay.
+        allow write: if esOperador();
+      }
+
+
+      match /participantes/{uid} {
+
+        // El operador ve la lista completa; cada persona solo
+        // puede leer su propio registro (para saber si está
+        // silenciada/baneada).
+        allow read: if esOperador() ||
+                    (request.auth != null && request.auth.uid == uid);
+
+        // Cada persona puede crear/actualizar su propio registro
+        // (nombre, foto, última actividad) al mandar un mensaje,
+        // pero NUNCA puede tocar el campo "estado" — eso es cosa
+        // exclusiva del operador (silenciar/banear/reactivar).
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && !('estado' in request.resource.data);
+
+        allow update: if (request.auth != null
+                      && request.auth.uid == uid
+                      && (!('estado' in request.resource.data)
+                          || request.resource.data.estado == resource.data.estado))
+                      || esOperador();
+
+        allow delete: if esOperador();
+      }
+
     }
   }
 }
