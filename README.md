@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.6)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.8)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -126,6 +126,14 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   como parada de emergencia real: limpia el overlay al instante y pasa
   ya al siguiente en espera, en vez de dejarlo en pantalla hasta que
   terminara su tiempo por sí solo.
+- *1.2.7* — Corregido: el arreglo de la 1.2.5 impedía sin querer que
+  "Aprobar" funcionara en modo automático (bloqueaba mensajes todavía en
+  estado "pendiente" al publicarlos directamente).
+- *1.2.8* — **QR Fijo**: nuevo interruptor ON/OFF junto a "Mostrar QR en
+  Overlay" / "Descargar QR". Publica el QR saltándose la cola por
+  completo y toma prioridad absoluta — mientras esté activado, la cola
+  se queda pausada (nada avanza, ni en modo automático). Al desactivarlo,
+  limpia el overlay y la cola retoma donde se había quedado.
 
 
 ## Funciones clave introducidas por versión (resumen rápido)
@@ -146,3 +154,4 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
 | Activar/desactivar eventos | V1.2 |
 | Cola de reproducción secuencial (sin solapes) | V1.2.1–1.2.6 |
 | Parada de emergencia desde la cola | V1.2.6 |
+| QR Fijo (prioridad absoluta, salta la cola) | V1.2.8 |
