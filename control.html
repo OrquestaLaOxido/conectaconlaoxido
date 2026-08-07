@@ -1204,6 +1204,25 @@ function publicarMensajeDesdeId(id){
 let timersReproduccion = {};
 
 
+/* Actualiza cada segundo el "(Xs)" junto a "En reproducción" en la
+   cola, leyendo directamente del DOM — no depende de que Firestore
+   vuelva a redibujar la lista. */
+
+setInterval(()=>{
+
+  document.querySelectorAll(".tiempoRestante").forEach(el=>{
+
+    let termina = Number(el.dataset.termina) || 0;
+
+    let restante = Math.max(0, Math.ceil((termina - Date.now()) / 1000));
+
+    el.textContent = "(" + restante + "s)";
+
+  });
+
+}, 1000);
+
+
 function programarFinReproduccion(id, terminaEn){
 
   if(timersReproduccion[id]) return;
@@ -1414,7 +1433,7 @@ function renderCola(docs){
 
 
     let insignia = enReproduccion ?
-      '<div class="insigniaReproduccion">En reproducción</div>' :
+      `<div class="insigniaReproduccion">En reproducción <span class="tiempoRestante" data-termina="${d.terminaEn || 0}">–</span></div>` :
 
       enEspera ?
       '<div class="insigniaEnEspera">⏳ En espera de turno</div>' : "";

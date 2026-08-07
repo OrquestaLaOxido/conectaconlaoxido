@@ -4129,6 +4129,15 @@ input, textarea{
 }
 
 
+.tiempoRestante{
+
+    font-weight:400;
+
+    color:var(--texto-tenue);
+
+}
+
+
 @keyframes parpadeoReproduccion{
 
     0%,100%{
