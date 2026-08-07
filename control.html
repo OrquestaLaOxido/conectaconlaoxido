@@ -1070,7 +1070,11 @@ function publicarMensajeDesdeId(id){
     // publicado por otra vía). Si ya no está disponible, no lo
     // publicamos — y de paso probamos con el siguiente en espera,
     // para que la cola no se quede parada.
-    if(!d || (d.estado !== "en_cola" && d.estado !== "en_espera")){
+    // ("pendiente" es válido aquí: es lo que usa el modo automático
+    // al aprobar un mensaje directamente desde la bandeja).
+    let estadosValidos = ["pendiente", "en_cola", "en_espera"];
+
+    if(!d || !estadosValidos.includes(d.estado)){
 
       return reproducirSiguienteEnEspera();
 
