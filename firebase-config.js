@@ -94,6 +94,13 @@ function obtenerEventoId(){
 const EVENTO_ID = obtenerEventoId();
 
 
+/* Versión de la app — se muestra junto al copyright en index.html,
+   control.html y dashboard.html. Súbela en cada actualización
+   (1.2.1, 1.2.2...) salvo que se indique lo contrario. */
+
+const VERSION_APP = "1.2.1";
+
+
 
 /* Estas 4 funciones aceptan opcionalmente qué base de datos usar
    (db normal, o dbOperador). Si no se indica, usan "db" (la pública) —

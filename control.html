@@ -213,7 +213,7 @@ Automática — sale en pantalla en cuanto lo apruebas
 
 <button class="sidebarBtn sidebarSalir" onclick="cerrarSesion()">🚪 Cerrar sesión</button>
 
-<p class="sidebarCopy">© <span id="anioActual"></span> La Óxido</p>
+<p class="sidebarCopy">© <span id="anioActual"></span> La Óxido · <span id="versionApp"></span></p>
 
 </aside>
 
@@ -477,6 +477,8 @@ Marcar mensajes con posibles palabras prohibidas
 
 
 document.getElementById("anioActual").textContent = new Date().getFullYear();
+
+document.getElementById("versionApp").textContent = "V" + VERSION_APP;
 
 
 authOperador.onAuthStateChanged(async usuario=>{
@@ -2024,6 +2026,14 @@ function mostrarFotoDirecta(){
   fotoApta.checked = false;
 
   botonFoto.disabled = true;
+
+  fotoActual = null;
+
+  vistaFoto.src = "";
+
+  vistaFoto.style.display = "none";
+
+  archivoFoto.value = "";
 
 }
 

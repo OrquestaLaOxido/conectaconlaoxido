@@ -191,7 +191,7 @@ Continuar con Google
 
 </div>
 
-<p class="piePublicoCopy">© <span id="anioActual"></span> La Óxido. Todos los derechos reservados.</p>
+<p class="piePublicoCopy">© <span id="anioActual"></span> La Óxido. Todos los derechos reservados. · <span id="versionApp"></span></p>
 
 </footer>
 
@@ -215,6 +215,8 @@ let pFotoBase64 = null;
 document.getElementById("insigniaEventoPublico").textContent = "Evento: " + EVENTO_ID;
 
 document.getElementById("anioActual").textContent = new Date().getFullYear();
+
+document.getElementById("versionApp").textContent = "V" + VERSION_APP;
 
 
 
