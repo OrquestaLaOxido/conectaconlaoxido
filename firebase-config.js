@@ -98,7 +98,7 @@ const EVENTO_ID = obtenerEventoId();
    control.html y dashboard.html. Súbela en cada actualización
    (1.2.1, 1.2.2...) salvo que se indique lo contrario. */
 
-const VERSION_APP = "1.2.8";
+const VERSION_APP = "1.2.9";
 
 
 

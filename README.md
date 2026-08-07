@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.8)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.9)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -134,6 +134,12 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   completo y toma prioridad absoluta — mientras esté activado, la cola
   se queda pausada (nada avanza, ni en modo automático). Al desactivarlo,
   limpia el overlay y la cola retoma donde se había quedado.
+- *1.2.9* — Corregido: al activar el QR Fijo, lo que ya se estaba
+  reproduciendo en ese momento seguía con su temporizador corriendo por
+  detrás y acababa dándose por "mostrado" sin que se llegara a ver — así
+  que al desactivar el QR Fijo, no volvía a aparecer. Ahora se pausa de
+  verdad (se cancela su temporizador) y se retoma exactamente eso,
+  con prioridad, en cuanto se desactiva el QR Fijo.
 
 
 ## Funciones clave introducidas por versión (resumen rápido)
@@ -155,3 +161,4 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
 | Cola de reproducción secuencial (sin solapes) | V1.2.1–1.2.6 |
 | Parada de emergencia desde la cola | V1.2.6 |
 | QR Fijo (prioridad absoluta, salta la cola) | V1.2.8 |
+

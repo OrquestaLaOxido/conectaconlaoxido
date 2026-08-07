@@ -747,6 +747,33 @@ function iniciarSelectorQRFijo(){
 
       try{
 
+        // Si algo está reproduciéndose ahora mismo, lo pausamos de
+        // verdad: cancelamos su temporizador (si no, seguiría
+        // corriendo por detrás y acabaría dándose por "mostrado" sin
+        // que llegaras a verlo) y lo marcamos como "pausado" para
+        // poder retomarlo tal cual al desactivar el QR fijo.
+        let snapReproduciendo = await refMensajes(dbOperador)
+          .where("estado","==","reproduciendo")
+          .limit(1)
+          .get();
+
+        if(!snapReproduciendo.empty){
+
+          let docReproduciendo = snapReproduciendo.docs[0];
+
+          if(timersReproduccion[docReproduciendo.id]){
+
+            clearTimeout(timersReproduccion[docReproduciendo.id]);
+
+            delete timersReproduccion[docReproduciendo.id];
+
+          }
+
+          await docReproduciendo.ref.update({estado: "pausado"});
+
+        }
+
+
         await refEvento(EVENTO_ID, dbOperador).set({qrFijoActivo: true}, {merge:true});
 
         await publicarEnVivo({
@@ -775,7 +802,23 @@ function iniciarSelectorQRFijo(){
 
         limpiarOverlay();
 
-        reproducirSiguienteEnEspera();
+
+        // Si algo se quedó pausado por el QR fijo, tiene prioridad:
+        // retoma exactamente eso antes que cualquier otra cosa en espera.
+        let snapPausado = await refMensajes(dbOperador)
+          .where("estado","==","pausado")
+          .limit(1)
+          .get();
+
+        if(!snapPausado.empty){
+
+          await publicarMensajeDesdeId(snapPausado.docs[0].id);
+
+        }else{
+
+          reproducirSiguienteEnEspera();
+
+        }
 
       }catch(err){
 
@@ -1183,7 +1226,7 @@ function publicarMensajeDesdeId(id){
     // para que la cola no se quede parada.
     // ("pendiente" es válido aquí: es lo que usa el modo automático
     // al aprobar un mensaje directamente desde la bandeja).
-    let estadosValidos = ["pendiente", "en_cola", "en_espera"];
+    let estadosValidos = ["pendiente", "en_cola", "en_espera", "pausado"];
 
     if(!d || !estadosValidos.includes(d.estado)){
 
@@ -1517,7 +1560,7 @@ async function reproducirSiguienteEnEspera(){
 function escucharCola(){
 
   refMensajes(dbOperador)
-  .where("estado","in",["en_cola","en_espera","reproduciendo"])
+  .where("estado","in",["en_cola","en_espera","reproduciendo","pausado"])
   .orderBy("creado","asc")
   .onSnapshot(snapshot=>{
 
@@ -1544,7 +1587,7 @@ function escucharCola(){
 
 function ordenarParaMostrar(docs){
 
-  let prioridadEstado = {reproduciendo:0, en_espera:1, en_cola:2};
+  let prioridadEstado = {reproduciendo:0, pausado:1, en_espera:2, en_cola:3};
 
 
   let aMilisegundos = valor => {
@@ -1610,6 +1653,8 @@ function renderCola(docsSinOrdenar){
 
     let enEspera = d.estado === "en_espera";
 
+    let pausado = d.estado === "pausado";
+
 
     // Si ya está reproduciéndose, nos aseguramos de que su
     // temporizador esté programado (por si se recargó la página
@@ -1624,11 +1669,14 @@ function renderCola(docsSinOrdenar){
     let insignia = enReproduccion ?
       `<div class="insigniaReproduccion">En reproducción <span class="tiempoRestante" data-termina="${d.terminaEn || 0}">–</span></div>` :
 
+      pausado ?
+      '<div class="insigniaEnEspera">⏸️ Pausado por el QR fijo</div>' :
+
       enEspera ?
       '<div class="insigniaEnEspera">⏳ En espera de turno</div>' : "";
 
 
-    let botonesAccion = (enReproduccion || enEspera) ?
+    let botonesAccion = (enReproduccion || enEspera || pausado) ?
       `<button class="limpiar" data-id="${doc.id}" data-accion="quitar" data-reproduciendo="${enReproduccion}">🗑️ Quitar</button>` :
       `
       <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
@@ -1638,7 +1686,7 @@ function renderCola(docsSinOrdenar){
 
     let card = document.createElement("div");
 
-    card.className = "itemPendiente" + (enReproduccion ? " itemReproduciendo" : enEspera ? " itemEnEspera" : "");
+    card.className = "itemPendiente" + (enReproduccion ? " itemReproduciendo" : (enEspera || pausado) ? " itemEnEspera" : "");
 
 
     if(d.tipo === "qr"){
