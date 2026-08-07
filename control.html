@@ -1397,7 +1397,56 @@ function escucharCola(){
 
 
 
-function renderCola(docs){
+/* Ordena la lista para que se vea en el mismo orden en que va a
+   reproducirse de verdad: primero lo que está en pantalla, luego
+   lo que está en espera (por orden de cuándo se pulsó "Mostrar"),
+   y al final lo que aún no se ha pulsado (por orden de aprobación). */
+
+function ordenarParaMostrar(docs){
+
+  let prioridadEstado = {reproduciendo:0, en_espera:1, en_cola:2};
+
+
+  let aMilisegundos = valor => {
+
+    if(!valor) return 0;
+
+    return typeof valor.toMillis === "function" ? valor.toMillis() : valor;
+
+  };
+
+
+  return docs.slice().sort((a, b)=>{
+
+    let da = a.data();
+
+    let db2 = b.data();
+
+
+    let pa = prioridadEstado[da.estado] ?? 3;
+
+    let pb = prioridadEstado[db2.estado] ?? 3;
+
+    if(pa !== pb) return pa - pb;
+
+
+    if(da.estado === "en_espera"){
+
+      return aMilisegundos(da.puestoEnEsperaEn) - aMilisegundos(db2.puestoEnEsperaEn);
+
+    }
+
+
+    return aMilisegundos(da.creado) - aMilisegundos(db2.creado);
+
+  });
+
+}
+
+
+function renderCola(docsSinOrdenar){
+
+  let docs = ordenarParaMostrar(docsSinOrdenar);
 
   let cont = document.getElementById("colaVisualizacion");
 
