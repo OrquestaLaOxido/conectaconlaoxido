@@ -692,7 +692,6 @@ function renderEventos(docs){
     <div class="tarjetaEventoInfo">
     <h3>${escapeHTML(d.titulo || doc.id)}</h3>
     <p>${escapeHTML(d.fecha || "")}</p>
-    <span class="badgeEstadoEvento ${d.activo === false ? "badgeInactivo" : "badgeActivo"}">${d.activo === false ? "⛔ Inactivo" : "✅ Activo"}</span>
     </div>
     <div class="tarjetaEventoAcciones">
     <button class="mostrar" data-id="${doc.id}" data-accion="moderar">🎛️ Moderar</button>
@@ -700,7 +699,7 @@ function renderEventos(docs){
     <button class="botonEditar" data-id="${doc.id}" data-accion="editar">✏️ Editar</button>
     <button class="limpiar" data-id="${doc.id}" data-titulo="${escapeHTML(d.titulo || doc.id)}" data-accion="eliminar">🗑️ Eliminar</button>
     </div>
-    <button class="botonToggleActivo botonAncho" data-id="${doc.id}" data-activo="${d.activo !== false}" data-accion="toggleActivo">${d.activo === false ? "✅ Activar evento" : "⛔ Desactivar evento"}</button>
+    ${htmlSelectorEstado(doc.id, d.activo !== false)}
     `;
 
 
@@ -740,20 +739,16 @@ function renderEventos(docs){
 
       }
 
+    });
 
-      if(btn.dataset.accion==="toggleActivo"){
+  });
 
-        let estaActivo = btn.dataset.activo === "true";
 
-        refEvento(btn.dataset.id, dbOperador).update({activo: !estaActivo}).catch(err=>{
+  cont.querySelectorAll(".selectorEstado").forEach(sel=>{
 
-          console.error(err);
+    sel.addEventListener("click", ()=>{
 
-          alert("No se pudo cambiar el estado del evento: " + err.message);
-
-        });
-
-      }
+      alternarEstadoEvento(sel);
 
     });
 
@@ -798,7 +793,67 @@ function cerrarModalCrearEventoFondo(e){
 
 
 
-/* generarSlug() viene ahora de qr-utils.js */
+/* Cambia el estado activo/inactivo. Actualiza el propio interruptor
+   al instante (sin esperar a Firestore ni a que se cierre/abra la
+   tarjeta), y si el guardado fallara, lo revierte visualmente. */
+
+function alternarEstadoEvento(selectorEl){
+
+  let id = selectorEl.dataset.id;
+
+  let estabaActivo = selectorEl.dataset.activo === "true";
+
+  let nuevoActivo = !estabaActivo;
+
+
+  aplicarEstadoVisual(selectorEl, nuevoActivo);
+
+
+  refEvento(id, dbOperador).update({activo: nuevoActivo}).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo cambiar el estado del evento: " + err.message);
+
+    aplicarEstadoVisual(selectorEl, estabaActivo);
+
+  });
+
+}
+
+
+function aplicarEstadoVisual(selectorEl, activo){
+
+  selectorEl.dataset.activo = String(activo);
+
+  selectorEl.querySelector(".selectorEstadoPista").classList.toggle("activo", activo);
+
+  let etiquetas = selectorEl.querySelectorAll(".selectorEstadoEtiqueta");
+
+  etiquetas[0].classList.toggle("activa", !activo);
+
+  etiquetas[1].classList.toggle("activa", activo);
+
+}
+
+
+/* Selector horizontal Inactivo/Activo — izquierda = inactivo,
+   derecha = activo. Se usa tanto en la lista general como en el
+   popup del calendario. */
+
+function htmlSelectorEstado(id, activo){
+
+  return `
+  <div class="selectorEstado" data-id="${id}" data-activo="${activo}" data-accion="toggleActivo">
+  <span class="selectorEstadoEtiqueta ${!activo ? "activa" : ""}">Inactivo</span>
+  <div class="selectorEstadoPista ${activo ? "activo" : ""}">
+  <div class="selectorEstadoBola"></div>
+  </div>
+  <span class="selectorEstadoEtiqueta ${activo ? "activa" : ""}">Activo</span>
+  </div>
+  `;
+
+}
 
 
 
@@ -1188,7 +1243,6 @@ function mostrarEventosDelDia(eventosDia){
     <div class="tarjetaEventoInfo">
     <h3>${escapeHTML(ev.titulo || ev.id)}</h3>
     <p>${escapeHTML(ev.fecha || "")}</p>
-    <span class="badgeEstadoEvento ${ev.activo === false ? "badgeInactivo" : "badgeActivo"}">${ev.activo === false ? "⛔ Inactivo" : "✅ Activo"}</span>
     </div>
     <div class="tarjetaEventoAcciones">
     <button class="mostrar" data-id="${ev.id}" data-accion="moderar">🎛️ Moderar</button>
@@ -1196,7 +1250,7 @@ function mostrarEventosDelDia(eventosDia){
     <button class="botonEditar" data-id="${ev.id}" data-accion="editar">✏️ Editar</button>
     <button class="limpiar" data-id="${ev.id}" data-titulo="${escapeHTML(ev.titulo || ev.id)}" data-accion="eliminar">🗑️ Eliminar</button>
     </div>
-    <button class="botonToggleActivo botonAncho" data-id="${ev.id}" data-activo="${ev.activo !== false}" data-accion="toggleActivo">${ev.activo === false ? "✅ Activar evento" : "⛔ Desactivar evento"}</button>
+    ${htmlSelectorEstado(ev.id, ev.activo !== false)}
     `;
 
 
@@ -1242,20 +1296,16 @@ function mostrarEventosDelDia(eventosDia){
 
       }
 
+    });
 
-      if(btn.dataset.accion==="toggleActivo"){
+  });
 
-        let estaActivo = btn.dataset.activo === "true";
 
-        refEvento(btn.dataset.id, dbOperador).update({activo: !estaActivo}).catch(err=>{
+  cont.querySelectorAll(".selectorEstado").forEach(sel=>{
 
-          console.error(err);
+    sel.addEventListener("click", ()=>{
 
-          alert("No se pudo cambiar el estado del evento: " + err.message);
-
-        });
-
-      }
+      alternarEstadoEvento(sel);
 
     });
 

@@ -4140,3 +4140,105 @@ input, textarea{
     margin-top:8px;
 
 }
+
+
+
+
+/* ==================================
+   SELECTOR HORIZONTAL INACTIVO/ACTIVO (dashboard.html)
+   ================================== */
+
+
+.selectorEstado{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    margin-top:14px;
+
+    cursor:pointer;
+
+    user-select:none;
+
+}
+
+
+.selectorEstadoEtiqueta{
+
+    font-size:13px;
+
+    font-weight:700;
+
+    color:var(--texto-tenue);
+
+    transition:color .2s;
+
+}
+
+
+.selectorEstadoEtiqueta.activa{
+
+    color:var(--texto);
+
+}
+
+
+.selectorEstadoPista{
+
+    position:relative;
+
+    width:52px;
+
+    height:28px;
+
+    border-radius:999px;
+
+    background:#B33A2E;
+
+    transition:background .25s;
+
+    flex-shrink:0;
+
+}
+
+
+.selectorEstadoPista.activo{
+
+    background:#1fae5c;
+
+}
+
+
+.selectorEstadoBola{
+
+    position:absolute;
+
+    top:3px;
+
+    left:3px;
+
+    width:22px;
+
+    height:22px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    box-shadow:0 2px 6px rgba(0,0,0,.3);
+
+    transition:transform .25s;
+
+}
+
+
+.selectorEstadoPista.activo .selectorEstadoBola{
+
+    transform:translateX(24px);
+
+}

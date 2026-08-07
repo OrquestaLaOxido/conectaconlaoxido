@@ -1041,6 +1041,36 @@ function publicarMensajeDesdeId(id){
 
       };
 
+    }else if(d.tipo === "reaccion"){
+
+      paquete = {
+
+        tipo: "reaccion",
+
+        nombre: d.nombre || "",
+
+        avatar: d.avatar || null,
+
+        emoji: d.emoji || "❤️",
+
+        texto: d.texto || ""
+
+      };
+
+    }else if(d.tipo === "foto"){
+
+      paquete = {
+
+        tipo: "foto",
+
+        imagen: d.imagen || null,
+
+        nombre: d.nombre || "",
+
+        tiempo: duracionSegundos
+
+      };
+
     }else{
 
       paquete = {
@@ -1372,6 +1402,29 @@ function renderCola(docs){
       <div class="accionesPendiente">${botonesAccion}</div>
       `;
 
+    }else if(d.tipo === "reaccion"){
+
+      card.innerHTML = `
+      ${avatarHTML(d.avatar, d.nombre, "avatarMini", "avatarMiniInicial")}
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
+      <div class="textoPendiente">${d.emoji||""} ${escapeHTML(d.texto||"")}</div>
+      ${insignia}
+      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
+      `;
+
+    }else if(d.tipo === "foto"){
+
+      card.innerHTML = `
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">📸 ${escapeHTML(d.nombre || "Foto")}</div>
+      ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
+      ${insignia}
+      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
+      `;
+
     }else{
 
       card.innerHTML = `
@@ -1681,9 +1734,9 @@ function mostrarMensajeManual(){
   if(!pasaModeracion([texto, nombre])) return;
 
 
-  publicarEnVivo({
+  refMensajes(dbOperador).add({
 
-    tipo:"mensaje",
+    tipo: "mensaje",
 
     nombre: nombre,
 
@@ -1691,7 +1744,17 @@ function mostrarMensajeManual(){
 
     texto: texto,
 
-    tiempo: obtenerTiempo()
+    imagen: null,
+
+    estado: "en_cola",
+
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo añadir a la cola: " + err.message);
 
   });
 
@@ -1717,9 +1780,9 @@ function reaccion(e){
   let nombre = obtenerNombre() || "ALGUIEN";
 
 
-  publicarEnVivo({
+  refMensajes(dbOperador).add({
 
-    tipo:"reaccion",
+    tipo: "reaccion",
 
     nombre: nombre,
 
@@ -1727,7 +1790,17 @@ function reaccion(e){
 
     emoji: e,
 
-    texto: frases[e]
+    texto: frases[e],
+
+    estado: "en_cola",
+
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo añadir a la cola: " + err.message);
 
   });
 
@@ -1850,13 +1923,27 @@ function mostrarFotoDirecta(){
 
   if(!fotoActual || !fotoApta.checked) return;
 
-  publicarEnVivo({
+  refMensajes(dbOperador).add({
 
-    tipo:"foto",
+    tipo: "foto",
 
     imagen: fotoActual,
 
-    nombre: obtenerNombre()
+    nombre: obtenerNombre(),
+
+    texto: null,
+
+    avatar: null,
+
+    estado: "en_cola",
+
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+
+  }).catch(err=>{
+
+    console.error(err);
+
+    alert("No se pudo añadir a la cola: " + err.message);
 
   });
 

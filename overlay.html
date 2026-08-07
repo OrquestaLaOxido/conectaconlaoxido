@@ -687,6 +687,19 @@ contenedor.appendChild(credito);
 escenario.appendChild(contenedor);
 
 
+let duracion = (typeof d.tiempo==="number" ? d.tiempo : 8);
+
+setTimeout(()=>{
+
+if(contenedor.parentNode){
+
+limpiar();
+
+}
+
+},duracion*1000);
+
+
 }
 
 
