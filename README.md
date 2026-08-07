@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.10)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.11)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -147,6 +147,9 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   justo debajo del aviso de inicio de sesión con Google, ajustado a
   cualquier tamaño de pantalla. Al guardarse dentro del propio documento
   del evento, se borra automáticamente si el evento se elimina.
+- *1.2.11* — El logo de cliente se movió a justo debajo de la insignia
+  del evento (arriba del todo), así se ve siempre — tanto antes como
+  después de iniciar sesión — en vez de solo en la pantalla de login.
 
 
 ## Funciones clave introducidas por versión (resumen rápido)
