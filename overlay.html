@@ -107,6 +107,13 @@ refEnVivo().onSnapshot(snap=>{
   }
 
 
+  if(d.tipo==="qr_fijo"){
+
+    mostrarQRFijo(d);
+
+  }
+
+
   if(d.tipo==="red_social"){
 
     mostrarRedSocial(d);
@@ -330,6 +337,28 @@ function mostrarQR(d){
   },duracion*1000);
 
 }
+
+
+/* QR fijo: igual que el QR normal, pero SIN temporizador — se
+   queda en pantalla hasta que el operador lo desactive. */
+
+function mostrarQRFijo(d){
+
+  limpiar();
+
+
+  let caja = document.createElement("div");
+
+  caja.className = "cartelQR entrada " + claseFondo() + " " + claseFuente();
+
+
+  caja.innerHTML = `<img class="imagenQROverlay" src="${d.imagen}">`;
+
+
+  escenario.appendChild(caja);
+
+}
+
 
 
 

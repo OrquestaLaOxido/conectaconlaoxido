@@ -4302,3 +4302,24 @@ input, textarea{
     justify-content:center;
 
 }
+
+
+
+
+/* ==================================
+   INTERRUPTOR "QR FIJO" (control.html)
+   ================================== */
+
+
+.selectorQRFijo{
+
+    margin:16px 0 0;
+
+}
+
+
+.selectorQRFijo .selectorEstadoPista.activo{
+
+    background:var(--naranja);
+
+}

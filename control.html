@@ -247,7 +247,17 @@ Automática — sale en pantalla en cuanto lo apruebas
 
 <button class="mostrar botonAncho botonConEspacio" onclick="añadirQRACola()">📺 Mostrar QR en Overlay</button>
 
-<button class="fotoBtn botonAncho" onclick="descargarQRControl()">⬇️ Descargar QR</button>
+<button class="fotoBtn botonAncho botonConEspacio" onclick="descargarQRControl()">⬇️ Descargar QR</button>
+
+<div id="selectorQRFijo" class="selectorEstado selectorQRFijo" data-activo="false">
+<span class="selectorEstadoEtiqueta activa">OFF</span>
+<div class="selectorEstadoPista">
+<div class="selectorEstadoBola"></div>
+</div>
+<span class="selectorEstadoEtiqueta">📌 QR Fijo</span>
+</div>
+
+<p class="notaQR">El QR fijo se salta la cola y tiene prioridad — mientras esté activado, nada más saldrá en el overlay.</p>
 
 </div>
 
@@ -616,6 +626,8 @@ function iniciarPanel(){
 
   iniciarSelectorEstadoControl();
 
+  iniciarSelectorQRFijo();
+
 }
 
 
@@ -679,6 +691,105 @@ function aplicarEstadoVisualControl(el, activo){
   etiquetas[0].classList.toggle("activa", !activo);
 
   etiquetas[1].classList.toggle("activa", activo);
+
+}
+
+
+
+
+/* QR FIJO: se salta la cola por completo y tiene prioridad sobre
+   ella — mientras esté activado, nada más sale en el overlay. */
+
+function iniciarSelectorQRFijo(){
+
+  let el = document.getElementById("selectorQRFijo");
+
+
+  refEvento(EVENTO_ID, dbOperador).onSnapshot(snap=>{
+
+    let activo = snap.exists && snap.data().qrFijoActivo === true;
+
+    aplicarEstadoVisualControl(el, activo);
+
+  }, err=>{
+
+    console.error("Error escuchando el QR fijo:", err);
+
+  });
+
+
+  el.addEventListener("click", async ()=>{
+
+    let estabaActivo = el.dataset.activo === "true";
+
+    let nuevoActivo = !estabaActivo;
+
+
+    if(nuevoActivo){
+
+      let canvasQR = document.querySelector("#qrContenedor canvas");
+
+      if(!canvasQR){
+
+        alert("El QR todavía no está listo, espera un segundo e inténtalo de nuevo.");
+
+        return;
+
+      }
+
+
+      let titulo = document.getElementById("qrTituloControl").value.trim() || "Evento";
+
+      let subtitulo = document.getElementById("qrSubtituloControl").value.trim();
+
+      let canvasFinal = componerCanvasQR(canvasQR, titulo, subtitulo);
+
+
+      try{
+
+        await refEvento(EVENTO_ID, dbOperador).set({qrFijoActivo: true}, {merge:true});
+
+        await publicarEnVivo({
+
+          tipo: "qr_fijo",
+
+          imagen: canvasFinal.toDataURL("image/png")
+
+        });
+
+      }catch(err){
+
+        console.error(err);
+
+        alert("No se pudo activar el QR fijo: " + err.message);
+
+        aplicarEstadoVisualControl(el, false);
+
+      }
+
+    }else{
+
+      try{
+
+        await refEvento(EVENTO_ID, dbOperador).set({qrFijoActivo: false}, {merge:true});
+
+        limpiarOverlay();
+
+        reproducirSiguienteEnEspera();
+
+      }catch(err){
+
+        console.error(err);
+
+        alert("No se pudo desactivar el QR fijo: " + err.message);
+
+        aplicarEstadoVisualControl(el, true);
+
+      }
+
+    }
+
+  });
 
 }
 
@@ -1285,6 +1396,11 @@ function programarFinReproduccion(id, terminaEn){
 
 async function hayAlgoOcupandoElOverlay(){
 
+  let snapEvento = await refEvento(EVENTO_ID, dbOperador).get();
+
+  if(snapEvento.exists && snapEvento.data().qrFijoActivo === true) return true;
+
+
   let snap = await refMensajes(dbOperador)
     .where("estado","in",["reproduciendo","en_espera"])
     .limit(1)
@@ -1340,6 +1456,13 @@ async function encolarParaReproducir(id){
 async function reproducirSiguienteEnEspera(){
 
   try{
+
+    // El QR fijo tiene prioridad absoluta: si está activado, la cola
+    // se queda pausada hasta que se desactive.
+    let snapEvento = await refEvento(EVENTO_ID, dbOperador).get();
+
+    if(snapEvento.exists && snapEvento.data().qrFijoActivo === true) return;
+
 
     // Por seguridad: si por lo que sea ya hay algo reproduciéndose
     // (p.ej. esta función se llama dos veces casi a la vez), no
