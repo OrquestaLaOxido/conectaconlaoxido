@@ -1064,6 +1064,19 @@ function publicarMensajeDesdeId(id){
 
     let d = snap.data();
 
+
+    // Puede que entre el momento en que decidimos mostrar esto y
+    // este instante, alguien le haya dado a "Quitar" (o ya se haya
+    // publicado por otra vía). Si ya no está disponible, no lo
+    // publicamos — y de paso probamos con el siguiente en espera,
+    // para que la cola no se quede parada.
+    if(!d || (d.estado !== "en_cola" && d.estado !== "en_espera")){
+
+      return reproducirSiguienteEnEspera();
+
+    }
+
+
     let paquete;
 
     let duracionSegundos = obtenerDuracionSegundos(d.tipo);
