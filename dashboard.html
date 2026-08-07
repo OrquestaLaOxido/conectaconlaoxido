@@ -173,6 +173,17 @@ Automática — sale en pantalla en cuanto se aprueba
 
 <input id="ceFecha" type="date">
 
+<label class="etiquetaQR">Logo del cliente (opcional — PNG con fondo transparente)</label>
+
+<div id="ceLogoZona" class="dropzone dropzoneLogo">
+🖼️<br>ARRASTRA UN PNG AQUÍ
+<img id="ceLogoVista" style="display:none">
+</div>
+
+<input type="file" id="ceLogoArchivo" accept="image/png" style="display:none">
+
+<button type="button" class="limpiar botonQuitarLogo" id="ceLogoQuitar" style="display:none">🗑️ Quitar logo</button>
+
 <button class="mostrar botonAncho" onclick="crearEvento()">Crear evento</button>
 
 <div id="ceError" class="avisoPublico"></div>
@@ -196,6 +207,17 @@ Automática — sale en pantalla en cuanto se aprueba
 <input id="eeTitulo" placeholder="Título del evento">
 
 <input id="eeFecha" type="date">
+
+<label class="etiquetaQR">Logo del cliente (opcional — PNG con fondo transparente)</label>
+
+<div id="eeLogoZona" class="dropzone dropzoneLogo">
+🖼️<br>ARRASTRA UN PNG AQUÍ
+<img id="eeLogoVista" style="display:none">
+</div>
+
+<input type="file" id="eeLogoArchivo" accept="image/png" style="display:none">
+
+<button type="button" class="limpiar botonQuitarLogo" id="eeLogoQuitar" style="display:none">🗑️ Quitar logo</button>
 
 <div id="eeError" class="avisoPublico"></div>
 
@@ -332,6 +354,7 @@ Automática — sale en pantalla en cuanto se aprueba
 <script src="firebase-config.js"></script>
 <script src="moderacion.js"></script>
 <script src="qr-utils.js"></script>
+<script src="utilidades-imagen.js"></script>
 
 
 <script>
@@ -774,6 +797,8 @@ function abrirModalCrearEvento(){
 
   document.getElementById("ceError").style.display = "none";
 
+  quitarLogo("ce");
+
   document.getElementById("modalCrearEvento").style.display = "flex";
 
 }
@@ -782,6 +807,8 @@ function abrirModalCrearEvento(){
 function cerrarModalCrearEvento(){
 
   document.getElementById("modalCrearEvento").style.display = "none";
+
+  quitarLogo("ce");
 
 }
 
@@ -860,6 +887,114 @@ function htmlSelectorEstado(id, activo){
 
 
 
+/* ==================================
+   LOGO DEL CLIENTE (comisión de fiestas / ayuntamiento)
+   Compartido entre "Crear evento" (prefijo "ce") y
+   "Editar evento" (prefijo "ee"). Se guarda en el propio
+   documento del evento, así que se borra solo al eliminar el evento.
+   ================================== */
+
+
+let logosEnMemoria = {ce: null, ee: null};
+
+let logoEeQuitado = false;
+
+
+function configurarZonaLogo(prefijo){
+
+  let zona = document.getElementById(prefijo + "LogoZona");
+
+  let archivo = document.getElementById(prefijo + "LogoArchivo");
+
+
+  zona.onclick = () => archivo.click();
+
+
+  zona.ondragover = e => e.preventDefault();
+
+  zona.ondrop = async e => {
+
+    e.preventDefault();
+
+    await procesarLogo(prefijo, e.dataTransfer.files[0]);
+
+  };
+
+
+  archivo.onchange = async () => {
+
+    await procesarLogo(prefijo, archivo.files[0]);
+
+  };
+
+
+  document.getElementById(prefijo + "LogoQuitar").onclick = () => quitarLogo(prefijo);
+
+}
+
+
+async function procesarLogo(prefijo, file){
+
+  if(!file) return;
+
+
+  if(file.type !== "image/png"){
+
+    alert("El logo tiene que ser un archivo PNG (para que se conserve el fondo transparente).");
+
+    return;
+
+  }
+
+
+  let dataUrl = await redimensionarImagenPNG(file, 500);
+
+
+  logosEnMemoria[prefijo] = dataUrl;
+
+  if(prefijo === "ee") logoEeQuitado = false;
+
+
+  let vista = document.getElementById(prefijo + "LogoVista");
+
+  vista.src = dataUrl;
+
+  vista.style.display = "block";
+
+  document.getElementById(prefijo + "LogoZona").classList.add("dropzoneConImagen");
+
+  document.getElementById(prefijo + "LogoQuitar").style.display = "inline-block";
+
+}
+
+
+function quitarLogo(prefijo){
+
+  logosEnMemoria[prefijo] = null;
+
+  if(prefijo === "ee") logoEeQuitado = true;
+
+
+  document.getElementById(prefijo + "LogoVista").src = "";
+
+  document.getElementById(prefijo + "LogoVista").style.display = "none";
+
+  document.getElementById(prefijo + "LogoZona").classList.remove("dropzoneConImagen");
+
+  document.getElementById(prefijo + "LogoQuitar").style.display = "none";
+
+  document.getElementById(prefijo + "LogoArchivo").value = "";
+
+}
+
+
+configurarZonaLogo("ce");
+
+configurarZonaLogo("ee");
+
+
+
+
 async function crearEvento(){
 
   let titulo = document.getElementById("ceTitulo").value.trim();
@@ -908,7 +1043,9 @@ async function crearEvento(){
 
       creadoPor: authOperador.currentUser.uid,
 
-      activo: true
+      activo: true,
+
+      logoCliente: logosEnMemoria.ce || null
 
     });
 
@@ -955,6 +1092,24 @@ function abrirModalEditarEvento(id){
 
   document.getElementById("eeError").style.display = "none";
 
+
+  quitarLogo("ee");
+
+  logoEeQuitado = false;
+
+  if(evento.logoCliente){
+
+    document.getElementById("eeLogoVista").src = evento.logoCliente;
+
+    document.getElementById("eeLogoVista").style.display = "block";
+
+    document.getElementById("eeLogoZona").classList.add("dropzoneConImagen");
+
+    document.getElementById("eeLogoQuitar").style.display = "inline-block";
+
+  }
+
+
   document.getElementById("modalEditarEvento").style.display = "flex";
 
 }
@@ -965,6 +1120,8 @@ function cerrarModalEditarEvento(){
   document.getElementById("modalEditarEvento").style.display = "none";
 
   eventoEditando = null;
+
+  quitarLogo("ee");
 
 }
 
@@ -999,13 +1156,30 @@ function guardarEdicionEvento(){
   }
 
 
-  refEvento(eventoEditando, dbOperador).update({
+  let datos = {
 
     titulo: titulo,
 
     fecha: fecha
 
-  }).then(()=>{
+  };
+
+
+  // Solo tocamos el logo si el usuario ha subido uno nuevo o ha
+  // pedido quitarlo explícitamente — si no ha tocado nada, se deja
+  // el que ya hubiera.
+  if(logosEnMemoria.ee){
+
+    datos.logoCliente = logosEnMemoria.ee;
+
+  }else if(logoEeQuitado){
+
+    datos.logoCliente = null;
+
+  }
+
+
+  refEvento(eventoEditando, dbOperador).update(datos).then(()=>{
 
     cerrarModalEditarEvento();
 

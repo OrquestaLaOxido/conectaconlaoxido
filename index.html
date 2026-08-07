@@ -69,6 +69,8 @@ Continuar con Google
 
 <p class="notaGoogle">Necesitamos que inicies sesión con Google para poder enviar tu mensaje (así evitamos el spam). No hace falta registrarse, es tu cuenta de Google de siempre. <strong>Si tu mensaje se aprueba, tu nombre y foto de perfil de Google se proyectarán en pantalla junto a él.</strong></p>
 
+<img id="pLogoCliente" class="logoClientePublico" style="display:none">
+
 </div>
 
 
@@ -278,7 +280,9 @@ document.getElementById("versionApp").textContent = "V" + VERSION_APP;
 
     let snapEvento = await refEvento(EVENTO_ID).get();
 
-    let activo = snapEvento.exists && snapEvento.data().activo !== false;
+    let datosEvento = snapEvento.exists ? snapEvento.data() : {};
+
+    let activo = snapEvento.exists && datosEvento.activo !== false;
 
 
     document.getElementById("pCargandoEvento").style.display = "none";
@@ -287,6 +291,17 @@ document.getElementById("versionApp").textContent = "V" + VERSION_APP;
     if(activo){
 
       document.getElementById("pContenidoActivo").style.display = "block";
+
+
+      if(datosEvento.logoCliente){
+
+        let logoCliente = document.getElementById("pLogoCliente");
+
+        logoCliente.src = datosEvento.logoCliente;
+
+        logoCliente.style.display = "block";
+
+      }
 
     }else{
 

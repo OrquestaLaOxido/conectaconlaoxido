@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.9)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.10)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -140,6 +140,13 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   que al desactivar el QR Fijo, no volvía a aparecer. Ahora se pausa de
   verdad (se cancela su temporizador) y se retoma exactamente eso,
   con prioridad, en cuanto se desactiva el QR Fijo.
+- *1.2.10* — **Logo de cliente por evento**: al crear o editar un evento
+  en `dashboard.html` se puede subir un logo (PNG con fondo transparente
+  — comisión de fiestas, ayuntamiento...), con vista previa sobre fondo
+  a cuadros para comprobar la transparencia. Se muestra en `index.html`
+  justo debajo del aviso de inicio de sesión con Google, ajustado a
+  cualquier tamaño de pantalla. Al guardarse dentro del propio documento
+  del evento, se borra automáticamente si el evento se elimina.
 
 
 ## Funciones clave introducidas por versión (resumen rápido)
