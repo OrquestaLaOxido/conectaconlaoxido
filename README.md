@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.15)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.16)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -170,6 +170,8 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   pequeño "En colaboración con" entre ambos — asocia visualmente cliente
   y producto sin depender de ningún fondo que pudiera chocar con los
   colores del logo.
+- *1.2.16* — Ese texto pasa a decir "Organiza" en vez de "En
+  colaboración con".
 
 
 ## Funciones clave introducidas por versión (resumen rápido)
