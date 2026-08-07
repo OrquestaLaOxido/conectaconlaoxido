@@ -3188,9 +3188,9 @@ input, textarea{
 
     gap:24px;
 
-    padding:22px 40px;
+    padding:26px 40px;
 
-    border-radius:999px;
+    border-radius:36px;
 
     max-width:950px;
 
@@ -3199,6 +3199,8 @@ input, textarea{
     border:2px solid var(--borde);
 
     box-shadow:0 20px 50px rgba(0,0,0,.5);
+
+    overflow:hidden;
 
 }
 
