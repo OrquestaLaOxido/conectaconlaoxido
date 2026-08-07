@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.11)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.13)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -150,6 +150,16 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
 - *1.2.11* — El logo de cliente se movió a justo debajo de la insignia
   del evento (arriba del todo), así se ve siempre — tanto antes como
   después de iniciar sesión — en vez de solo en la pantalla de login.
+- *1.2.12* — El logo de cliente se reubicó otra vez: ahora va dentro de
+  la propia tarjeta, entre el logo de La Óxido y "¡Participa!" — visible
+  antes y después del login igualmente — y se agrandó bastante para que
+  destaque más.
+- *1.2.13* — Nuevo botón **"🖼️ Mostrar Logo Cliente en Overlay"** en el
+  bloque de Redes sociales de `control.html` — publica el logo subido en
+  el evento (el mismo que se ve en `index.html`) directamente en la cola
+  de visualización. En el overlay se muestra sobre el chroma sin
+  ninguna tarjeta oscura detrás, ya que el PNG ya lleva su propia
+  transparencia.
 
 
 ## Funciones clave introducidas por versión (resumen rápido)

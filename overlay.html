@@ -114,6 +114,13 @@ refEnVivo().onSnapshot(snap=>{
   }
 
 
+  if(d.tipo==="logo_cliente"){
+
+    mostrarLogoCliente(d);
+
+  }
+
+
   if(d.tipo==="red_social"){
 
     mostrarRedSocial(d);
@@ -356,6 +363,43 @@ function mostrarQRFijo(d){
 
 
   escenario.appendChild(caja);
+
+}
+
+
+
+
+/* El logo de cliente ya es un PNG con fondo transparente, así que se
+   muestra directo sobre el chroma, sin ninguna tarjeta oscura detrás
+   — así queda igual de integrado que el resto del vídeo. */
+
+function mostrarLogoCliente(d){
+
+  let duracion = (typeof d.tiempo==="number" ? d.tiempo : 8);
+
+
+  limpiar();
+
+
+  let img = document.createElement("img");
+
+  img.className = "entrada logoClienteOverlay";
+
+  img.src = d.imagen;
+
+
+  escenario.appendChild(img);
+
+
+  setTimeout(()=>{
+
+    if(img.parentNode){
+
+      limpiar();
+
+    }
+
+  },duracion*1000);
 
 }
 

@@ -414,7 +414,13 @@ Marcar mensajes con posibles palabras prohibidas
 
 <input id="tiktokHandleControl" placeholder="@usuario_tiktok">
 
-<button class="mostrar botonAncho" onclick="mostrarRedSocial('tiktok')">🎵 Mostrar TikTok en Overlay</button>
+<button class="mostrar botonAncho botonConEspacio" onclick="mostrarRedSocial('tiktok')">🎵 Mostrar TikTok en Overlay</button>
+
+<label class="etiquetaQR" style="margin-top:15px">Logo del cliente</label>
+
+<p class="notaQR">Se sube al crear/editar el evento en el Dashboard.</p>
+
+<button class="fotoBtn botonAncho" onclick="mostrarLogoClienteEnCola()">🖼️ Mostrar Logo Cliente en Overlay</button>
 
 <p class="notaQR">Cada una se añade a la cola de visualización por separado.</p>
 
@@ -1288,6 +1294,18 @@ function publicarMensajeDesdeId(id){
 
       };
 
+    }else if(d.tipo === "logo_cliente"){
+
+      paquete = {
+
+        tipo: "logo_cliente",
+
+        imagen: d.imagen || null,
+
+        tiempo: duracionSegundos
+
+      };
+
     }else if(d.tipo === "reaccion"){
 
       paquete = {
@@ -1729,6 +1747,17 @@ function renderCola(docsSinOrdenar){
       <div class="contenidoPendiente">
       <div class="nombrePendiente">🎁 Sorteo (${(d.nombres||[]).length} participantes)</div>
       <div class="textoPendiente">Ganador preparado: ${escapeHTML(d.ganador||"")}</div>
+      ${insignia}
+      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
+      `;
+
+    }else if(d.tipo === "logo_cliente"){
+
+      card.innerHTML = `
+      <div class="contenidoPendiente">
+      <div class="nombrePendiente">🖼️ Logo del cliente</div>
+      ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
       ${insignia}
       </div>
       <div class="accionesPendiente">${botonesAccion}</div>
@@ -2408,6 +2437,58 @@ function mostrarRedSocial(red){
     alert("No se pudo añadir a la cola: " + err.message);
 
   });
+
+}
+
+
+
+
+/* Publica el logo de cliente del evento (subido desde el Dashboard al
+   crear/editar el evento) en la cola de visualización. */
+
+async function mostrarLogoClienteEnCola(){
+
+  try{
+
+    let snap = await refEvento(EVENTO_ID, dbOperador).get();
+
+    let logo = snap.exists ? snap.data().logoCliente : null;
+
+
+    if(!logo){
+
+      alert("Este evento todavía no tiene ningún logo de cliente subido. Añádelo editando el evento desde el Dashboard.");
+
+      return;
+
+    }
+
+
+    await refMensajes(dbOperador).add({
+
+      tipo: "logo_cliente",
+
+      texto: null,
+
+      nombre: null,
+
+      avatar: null,
+
+      imagen: logo,
+
+      estado: "en_cola",
+
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+  }catch(err){
+
+    console.error(err);
+
+    alert("No se pudo añadir a la cola: " + err.message);
+
+  }
 
 }
 
