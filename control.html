@@ -961,6 +961,21 @@ function manejarAccionPendiente(id, accion){
    y marca su estado como "mostrado". Lo usan tanto el modo
    automático (desde pendientes) como el botón manual (desde la cola). */
 
+function obtenerDuracionSegundos(tipo){
+
+  if(tipo === "reaccion") return 6;
+
+  if(tipo === "emoji_lluvia") return 12;
+
+  if(tipo === "sorteo") return 60; // el overlay se queda hasta que limpies; esto es solo para la cola
+
+  return obtenerTiempo();
+
+}
+
+
+
+
 function publicarMensajeDesdeId(id){
 
   let ref = refMensajes(dbOperador).doc(id);
@@ -971,6 +986,8 @@ function publicarMensajeDesdeId(id){
 
     let paquete;
 
+    let duracionSegundos = obtenerDuracionSegundos(d.tipo);
+
 
     if(d.tipo === "qr"){
 
@@ -980,7 +997,7 @@ function publicarMensajeDesdeId(id){
 
         imagen: d.imagen || null,
 
-        tiempo: obtenerTiempo()
+        tiempo: duracionSegundos
 
       };
 
@@ -1004,7 +1021,7 @@ function publicarMensajeDesdeId(id){
 
         texto: d.texto || "",
 
-        tiempo: obtenerTiempo()
+        tiempo: duracionSegundos
 
       };
 
@@ -1034,16 +1051,23 @@ function publicarMensajeDesdeId(id){
 
         imagen: d.imagen || null,
 
-        tiempo: obtenerTiempo()
+        tiempo: duracionSegundos
 
       };
 
     }
 
 
+    let terminaEn = Date.now() + duracionSegundos * 1000;
+
+
     return publicarEnVivo(paquete).then(()=>{
 
-      return ref.update({estado:"mostrado"});
+      return ref.update({estado:"reproduciendo", terminaEn: terminaEn});
+
+    }).then(()=>{
+
+      programarFinReproduccion(id, terminaEn);
 
     });
 
@@ -1061,6 +1085,48 @@ function publicarMensajeDesdeId(id){
 
 
 
+/* Pasa el elemento a "mostrado" (y por tanto lo saca de la cola) en
+   cuanto se cumple su hora de fin — así se puede seguir viendo en la
+   cola como "En reproducción" hasta que le toca desaparecer.
+   Evita programar dos veces el mismo elemento, y si se recarga la
+   página a mitad de reproducción, calcula el tiempo que quede. */
+
+let timersReproduccion = {};
+
+
+function programarFinReproduccion(id, terminaEn){
+
+  if(timersReproduccion[id]) return;
+
+
+  let restante = terminaEn - Date.now();
+
+
+  let finalizar = () => {
+
+    delete timersReproduccion[id];
+
+    refMensajes(dbOperador).doc(id).update({estado:"mostrado"}).catch(()=>{});
+
+  };
+
+
+  if(restante <= 0){
+
+    finalizar();
+
+    return;
+
+  }
+
+
+  timersReproduccion[id] = setTimeout(finalizar, restante);
+
+}
+
+
+
+
 /* ==================================
    COLA DE VISUALIZACIÓN (mensajes aprobados, esperando salir en pantalla)
    ================================== */
@@ -1069,7 +1135,7 @@ function publicarMensajeDesdeId(id){
 function escucharCola(){
 
   refMensajes(dbOperador)
-  .where("estado","==","en_cola")
+  .where("estado","in",["en_cola","reproduciendo"])
   .orderBy("creado","asc")
   .onSnapshot(snapshot=>{
 
@@ -1080,7 +1146,7 @@ function escucharCola(){
     console.error("Error escuchando la cola:", err);
 
     document.getElementById("colaVisualizacion").innerHTML =
-      '<p class="avisoPalabra">⚠️ No se pudo cargar la cola (' + err.message + ').</p>';
+      '<p class="avisoPalabra">⚠️ No se pudo cargar la cola (' + err.message + '). Si es un error de índice, abre el enlace que te da el mensaje de la consola (F12) para crearlo — solo hay que hacerlo una vez.</p>';
 
   });
 
@@ -1109,10 +1175,34 @@ function renderCola(docs){
 
     let d = doc.data();
 
+    let enReproduccion = d.estado === "reproduciendo";
+
+
+    // Si ya está reproduciéndose, nos aseguramos de que su
+    // temporizador esté programado (por si se recargó la página
+    // a mitad, o es la primera vez que lo vemos en este navegador).
+    if(enReproduccion && d.terminaEn){
+
+      programarFinReproduccion(doc.id, d.terminaEn);
+
+    }
+
+
+    let insignia = enReproduccion ?
+      '<div class="insigniaReproduccion">En reproducción</div>' : "";
+
+
+    let botonesAccion = enReproduccion ?
+      `<button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>` :
+      `
+      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
+      `;
+
 
     let card = document.createElement("div");
 
-    card.className = "itemPendiente";
+    card.className = "itemPendiente" + (enReproduccion ? " itemReproduciendo" : "");
 
 
     if(d.tipo === "qr"){
@@ -1120,12 +1210,10 @@ function renderCola(docs){
       card.innerHTML = `
       <div class="contenidoPendiente">
       <div class="nombrePendiente">📺 Código QR del evento</div>
+      ${insignia}
       ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
       </div>
-      <div class="accionesPendiente">
-      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
-      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
-      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
       `;
 
     }else if(d.tipo === "emoji_lluvia"){
@@ -1135,11 +1223,9 @@ function renderCola(docs){
       <div class="contenidoPendiente">
       <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
       <div class="textoPendiente">🌧️ Lluvia de ${escapeHTML(d.texto||"")}</div>
+      ${insignia}
       </div>
-      <div class="accionesPendiente">
-      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
-      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
-      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
       `;
 
     }else if(d.tipo === "red_social"){
@@ -1148,11 +1234,9 @@ function renderCola(docs){
       <div class="contenidoPendiente">
       <div class="nombrePendiente">${d.red === "tiktok" ? "🎵 TikTok" : "📸 Instagram"} del evento</div>
       <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
+      ${insignia}
       </div>
-      <div class="accionesPendiente">
-      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
-      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
-      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
       `;
 
     }else if(d.tipo === "sorteo"){
@@ -1161,11 +1245,9 @@ function renderCola(docs){
       <div class="contenidoPendiente">
       <div class="nombrePendiente">🎁 Sorteo (${(d.nombres||[]).length} participantes)</div>
       <div class="textoPendiente">Ganador preparado: ${escapeHTML(d.ganador||"")}</div>
+      ${insignia}
       </div>
-      <div class="accionesPendiente">
-      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
-      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
-      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
       `;
 
     }else{
@@ -1176,11 +1258,9 @@ function renderCola(docs){
       <div class="nombrePendiente">${escapeHTML(d.nombre||"")}</div>
       <div class="textoPendiente">${escapeHTML(d.texto||"")}</div>
       ${d.imagen ? `<img class="fotoPendiente" src="${d.imagen}">` : ""}
+      ${insignia}
       </div>
-      <div class="accionesPendiente">
-      <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
-      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
-      </div>
+      <div class="accionesPendiente">${botonesAccion}</div>
       `;
 
     }

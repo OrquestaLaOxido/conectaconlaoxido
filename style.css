@@ -4040,3 +4040,72 @@ input, textarea{
 }
 
 }
+
+
+
+
+/* ==================================
+   INSIGNIA "EN REPRODUCCIÓN" (cola de visualización)
+   ================================== */
+
+
+.itemReproduciendo{
+
+    border:2px solid var(--naranja);
+
+    background:#2b1f10;
+
+}
+
+
+.insigniaReproduccion{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    color:var(--naranja);
+
+    margin-top:8px;
+
+}
+
+
+.insigniaReproduccion::before{
+
+    content:"";
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+
+    background:var(--naranja);
+
+    animation:parpadeoReproduccion 1s ease infinite;
+
+}
+
+
+@keyframes parpadeoReproduccion{
+
+    0%,100%{
+
+        opacity:1;
+
+    }
+
+    50%{
+
+        opacity:.3;
+
+    }
+
+}
