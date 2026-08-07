@@ -1502,10 +1502,10 @@ function renderCola(docsSinOrdenar){
 
 
     let botonesAccion = (enReproduccion || enEspera) ?
-      `<button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>` :
+      `<button class="limpiar" data-id="${doc.id}" data-accion="quitar" data-reproduciendo="${enReproduccion}">🗑️ Quitar</button>` :
       `
       <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
-      <button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>
+      <button class="limpiar" data-id="${doc.id}" data-accion="quitar" data-reproduciendo="false">🗑️ Quitar</button>
       `;
 
 
@@ -1607,7 +1607,7 @@ function renderCola(docsSinOrdenar){
 
     btn.addEventListener("click", ()=>{
 
-      manejarAccionCola(btn.dataset.id, btn.dataset.accion);
+      manejarAccionCola(btn.dataset.id, btn.dataset.accion, btn.dataset.reproduciendo === "true");
 
     });
 
@@ -1618,7 +1618,7 @@ function renderCola(docsSinOrdenar){
 
 
 
-function manejarAccionCola(id, accion){
+function manejarAccionCola(id, accion, estaReproduciendo){
 
   let ref = refMensajes(dbOperador).doc(id);
 
@@ -1626,6 +1626,28 @@ function manejarAccionCola(id, accion){
   if(accion==="quitar"){
 
     ref.update({estado:"rechazado"})
+    .then(()=>{
+
+      if(estaReproduciendo){
+
+        // Está en pantalla ahora mismo: lo quitamos también del
+        // overlay al instante (modo de emergencia), cancelamos su
+        // temporizador pendiente, y pasamos ya al siguiente en espera.
+        if(timersReproduccion[id]){
+
+          clearTimeout(timersReproduccion[id]);
+
+          delete timersReproduccion[id];
+
+        }
+
+        limpiarOverlay();
+
+        reproducirSiguienteEnEspera();
+
+      }
+
+    })
     .catch(err=>{
 
       console.error(err);
