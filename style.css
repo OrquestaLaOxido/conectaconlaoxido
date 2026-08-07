@@ -3985,3 +3985,56 @@ input, textarea{
     }
 
 }
+
+
+
+
+/* ==================================
+   BOTONES DE PARTICIPANTES (2 columnas, ahorra espacio)
+   ================================== */
+
+
+.accionesParticipante{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+
+    min-width:220px;
+
+}
+
+
+.accionesParticipante button{
+
+    font-size:15px;
+
+    padding:10px 12px;
+
+    white-space:nowrap;
+
+}
+
+
+.accionesParticipante button:only-child{
+
+    grid-column:1 / -1;
+
+}
+
+
+@media(max-width:600px){
+
+.accionesParticipante{
+
+    grid-template-columns:1fr;
+
+    min-width:0;
+
+    width:100%;
+
+}
+
+}
