@@ -102,7 +102,7 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   iniciar sesión — reforzado también en las reglas de Firestore, no solo
   en la interfaz.
 
-**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.13)**
+**Rondas de pulido tras el lanzamiento (V1.2.1 → V1.2.15)**
 
 - *1.2.1* — La foto directa del operador se limpia sola tras enviarse a
   la cola (antes se quedaba con la vista previa puesta, podía confundir).
@@ -160,6 +160,16 @@ Lanzamiento grande con seis funciones nuevas y un arreglo de bug:
   de visualización. En el overlay se muestra sobre el chroma sin
   ninguna tarjeta oscura detrás, ya que el PNG ya lleva su propia
   transparencia.
+- *1.2.14* — Logo de cliente en `index.html` agrandado, y con un fondo
+  blanco redondeado detrás — así se lee bien tanto si el logo tiene
+  texto oscuro como claro, sin depender del color del fondo de la
+  tarjeta.
+- *1.2.15* — Revertido el tamaño a 280px (sin la caja blanca, se deja de
+  lado por ahora el tema del texto oscuro). En su lugar, se integra el
+  logo del cliente justo debajo del de La Óxido, pegado, con un texto
+  pequeño "En colaboración con" entre ambos — asocia visualmente cliente
+  y producto sin depender de ningún fondo que pudiera chocar con los
+  colores del logo.
 
 
 ## Funciones clave introducidas por versión (resumen rápido)

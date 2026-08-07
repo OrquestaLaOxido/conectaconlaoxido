@@ -4386,6 +4386,30 @@ input, textarea{
    ================================== */
 
 
+.colaboracionCliente{
+
+    text-align:center;
+
+    font-size:12px;
+
+    letter-spacing:1.5px;
+
+    text-transform:uppercase;
+
+    color:var(--texto-tenue);
+
+    margin:2px 0 10px;
+
+}
+
+
+.logoPublico + .colaboracionCliente{
+
+    margin-top:-6px;
+
+}
+
+
 .logoClientePublico{
 
     display:block;
@@ -4398,7 +4422,7 @@ input, textarea{
 
     object-fit:contain;
 
-    margin:14px auto 20px;
+    margin:0 auto 20px;
 
 }
 

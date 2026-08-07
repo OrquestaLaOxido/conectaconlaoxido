@@ -26,9 +26,6 @@ Acceso moderación
 </nav>
 
 
-<img id="pLogoCliente" class="logoClientePublico" style="display:none">
-
-
 <div class="contenedorPublico">
 
 
@@ -55,6 +52,10 @@ Acceso moderación
 <div id="pContenidoActivo" class="tarjetaPublico" style="display:none">
 
 <img src="logo.png" class="logoPublico">
+
+<p id="pColaboracionCliente" class="colaboracionCliente" style="display:none">En colaboración con</p>
+
+<img id="pLogoCliente" class="logoClientePublico" style="display:none">
 
 <h1>🎤 ¡Participa!</h1>
 
@@ -301,6 +302,8 @@ document.getElementById("versionApp").textContent = "V" + VERSION_APP;
         logoCliente.src = datosEvento.logoCliente;
 
         logoCliente.style.display = "block";
+
+        document.getElementById("pColaboracionCliente").style.display = "block";
 
       }
 
