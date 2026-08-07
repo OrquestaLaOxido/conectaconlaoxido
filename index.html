@@ -29,6 +29,15 @@ Acceso moderación
 <div class="contenedorPublico">
 
 
+<div id="pCargandoEvento" class="tarjetaPublico">
+
+<img src="logo.png" class="logoPublico">
+
+<p class="subtitulo">Cargando…</p>
+
+</div>
+
+
 <div id="pSinEvento" class="tarjetaPublico" style="display:none">
 
 <img src="logo.png" class="logoPublico">
@@ -40,7 +49,7 @@ Acceso moderación
 </div>
 
 
-<div id="pContenidoActivo" class="tarjetaPublico">
+<div id="pContenidoActivo" class="tarjetaPublico" style="display:none">
 
 <img src="logo.png" class="logoPublico">
 
@@ -218,13 +227,64 @@ document.getElementById("anioActual").textContent = new Date().getFullYear();
 
   try{
 
-    let snap = await refEvento(EVENTO_ID).get();
+    let params = new URLSearchParams(window.location.search);
 
-    let activo = snap.exists && snap.data().activo !== false;
+    let eventoIndicado = params.get("evento");
 
-    if(!activo){
 
-      document.getElementById("pContenidoActivo").style.display = "none";
+    if(!eventoIndicado){
+
+      // No se ha indicado ningún evento en la URL (p.ej. alguien
+      // entra por la dirección raíz, sin pasar por un QR concreto):
+      // buscamos si hay un evento activo programado para hoy y nos
+      // llevamos ahí mismo.
+      let hoy = new Date();
+
+      let fechaHoy = hoy.getFullYear() + "-" +
+        String(hoy.getMonth()+1).padStart(2,"0") + "-" +
+        String(hoy.getDate()).padStart(2,"0");
+
+
+      let snap = await db.collection("eventos").where("fecha","==",fechaHoy).get();
+
+      let encontrado = snap.docs.find(doc => doc.data().activo !== false);
+
+
+      if(encontrado){
+
+        let url = new URL(window.location.href);
+
+        url.searchParams.set("evento", encontrado.id);
+
+        window.location.replace(url.toString());
+
+        return; // nos vamos a recargar con el evento correcto
+
+      }
+
+
+      document.getElementById("pCargandoEvento").style.display = "none";
+
+      document.getElementById("pSinEvento").style.display = "block";
+
+      return;
+
+    }
+
+
+    let snapEvento = await refEvento(EVENTO_ID).get();
+
+    let activo = snapEvento.exists && snapEvento.data().activo !== false;
+
+
+    document.getElementById("pCargandoEvento").style.display = "none";
+
+
+    if(activo){
+
+      document.getElementById("pContenidoActivo").style.display = "block";
+
+    }else{
 
       document.getElementById("pSinEvento").style.display = "block";
 
@@ -233,6 +293,10 @@ document.getElementById("anioActual").textContent = new Date().getFullYear();
   }catch(err){
 
     console.error("Error comprobando el evento:", err);
+
+    document.getElementById("pCargandoEvento").style.display = "none";
+
+    document.getElementById("pSinEvento").style.display = "block";
 
   }
 
