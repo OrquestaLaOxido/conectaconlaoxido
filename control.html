@@ -1106,7 +1106,13 @@ function programarFinReproduccion(id, terminaEn){
 
     delete timersReproduccion[id];
 
-    refMensajes(dbOperador).doc(id).update({estado:"mostrado"}).catch(()=>{});
+    refMensajes(dbOperador).doc(id).update({estado:"mostrado"})
+    .then(()=>{
+
+      reproducirSiguienteEnEspera();
+
+    })
+    .catch(()=>{});
 
   };
 
@@ -1127,6 +1133,92 @@ function programarFinReproduccion(id, terminaEn){
 
 
 
+/* ¿Hay algo reproduciéndose ahora mismo, o algo ya esperando turno?
+   Si es así, lo nuevo tiene que esperar — así nunca se solapan dos
+   cosas en el overlay. */
+
+async function hayAlgoOcupandoElOverlay(){
+
+  let snap = await refMensajes(dbOperador)
+    .where("estado","in",["reproduciendo","en_espera"])
+    .limit(1)
+    .get();
+
+  return !snap.empty;
+
+}
+
+
+/* Al pulsar "Mostrar": si el overlay está libre, sale ya. Si no,
+   se pone "en_espera" y le llegará el turno automáticamente en
+   cuanto termine lo que hay puesto. */
+
+async function encolarParaReproducir(id){
+
+  try{
+
+    let ocupado = await hayAlgoOcupandoElOverlay();
+
+
+    if(ocupado){
+
+      await refMensajes(dbOperador).doc(id).update({
+
+        estado: "en_espera",
+
+        puestoEnEsperaEn: firebase.firestore.FieldValue.serverTimestamp()
+
+      });
+
+    }else{
+
+      await publicarMensajeDesdeId(id);
+
+    }
+
+  }catch(err){
+
+    console.error(err);
+
+    alert("No se pudo poner en la cola: " + err.message);
+
+  }
+
+}
+
+
+/* Se llama automáticamente cada vez que algo termina de reproducirse
+   — busca el siguiente en espera (el que más tiempo lleva esperando)
+   y lo saca a pantalla. */
+
+async function reproducirSiguienteEnEspera(){
+
+  try{
+
+    let snapshot = await refMensajes(dbOperador)
+      .where("estado","==","en_espera")
+      .orderBy("puestoEnEsperaEn","asc")
+      .limit(1)
+      .get();
+
+
+    if(!snapshot.empty){
+
+      await publicarMensajeDesdeId(snapshot.docs[0].id);
+
+    }
+
+  }catch(err){
+
+    console.error("Error reproduciendo el siguiente en espera:", err);
+
+  }
+
+}
+
+
+
+
 /* ==================================
    COLA DE VISUALIZACIÓN (mensajes aprobados, esperando salir en pantalla)
    ================================== */
@@ -1135,7 +1227,7 @@ function programarFinReproduccion(id, terminaEn){
 function escucharCola(){
 
   refMensajes(dbOperador)
-  .where("estado","in",["en_cola","reproduciendo"])
+  .where("estado","in",["en_cola","en_espera","reproduciendo"])
   .orderBy("creado","asc")
   .onSnapshot(snapshot=>{
 
@@ -1177,6 +1269,8 @@ function renderCola(docs){
 
     let enReproduccion = d.estado === "reproduciendo";
 
+    let enEspera = d.estado === "en_espera";
+
 
     // Si ya está reproduciéndose, nos aseguramos de que su
     // temporizador esté programado (por si se recargó la página
@@ -1189,10 +1283,13 @@ function renderCola(docs){
 
 
     let insignia = enReproduccion ?
-      '<div class="insigniaReproduccion">En reproducción</div>' : "";
+      '<div class="insigniaReproduccion">En reproducción</div>' :
+
+      enEspera ?
+      '<div class="insigniaEnEspera">⏳ En espera de turno</div>' : "";
 
 
-    let botonesAccion = enReproduccion ?
+    let botonesAccion = (enReproduccion || enEspera) ?
       `<button class="limpiar" data-id="${doc.id}" data-accion="quitar">🗑️ Quitar</button>` :
       `
       <button class="mostrar" data-id="${doc.id}" data-accion="mostrar">▶️ Mostrar</button>
@@ -1202,7 +1299,7 @@ function renderCola(docs){
 
     let card = document.createElement("div");
 
-    card.className = "itemPendiente" + (enReproduccion ? " itemReproduciendo" : "");
+    card.className = "itemPendiente" + (enReproduccion ? " itemReproduciendo" : enEspera ? " itemEnEspera" : "");
 
 
     if(d.tipo === "qr"){
@@ -1307,7 +1404,7 @@ function manejarAccionCola(id, accion){
   }
 
 
-  publicarMensajeDesdeId(id);
+  encolarParaReproducir(id);
 
 }
 

@@ -4109,3 +4109,34 @@ input, textarea{
     }
 
 }
+
+
+
+
+/* ==================================
+   INSIGNIA "EN ESPERA DE TURNO" (cola de visualización)
+   ================================== */
+
+
+.itemEnEspera{
+
+    border:2px solid var(--gris-claro);
+
+    opacity:.75;
+
+}
+
+
+.insigniaEnEspera{
+
+    display:inline-block;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    color:var(--texto-tenue);
+
+    margin-top:8px;
+
+}
